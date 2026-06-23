@@ -1,3 +1,4 @@
+cat > /home/claude/game-of-life/index.html << 'HTMLEOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,390 +9,137 @@
 <meta name="apple-mobile-web-app-title" content="Game Of Life">
 <meta name="theme-color" content="#090910">
 <title>Game Of Life</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #090910;
-    --bg2: #0f0f1a;
-    --bg3: #141424;
-    --card: #111120;
-    --border: rgba(255,255,255,0.06);
-    --gold: #C9A84C;
-    --gold2: #E8C96A;
-    --gold-dim: rgba(201,168,76,0.12);
-    --gold-glow: rgba(201,168,76,0.25);
-    --white: #FFFFFF;
-    --gray: #8888AA;
-    --gray2: #555570;
-    --red: #E05555;
-    --green: #4CAF7D;
-    --blue: #5588EE;
-    --bebas: 'Bebas Neue', sans-serif;
-    --inter: 'Inter', sans-serif;
-    --radius: 16px;
-    --radius-sm: 10px;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-  body {
-    background: var(--bg);
-    color: var(--white);
-    font-family: var(--inter);
-    min-height: 100vh;
-    min-height: -webkit-fill-available;
-    overflow-x: hidden;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* SCROLLBAR */
-  ::-webkit-scrollbar { width: 0; }
-
-  /* APP SHELL */
-  #app { display: flex; flex-direction: column; min-height: 100vh; min-height: -webkit-fill-available; }
-
-  /* SCREENS */
-  .screen { display: none; flex-direction: column; flex: 1; overflow-y: auto; padding-bottom: 80px; animation: fadeIn 0.2s ease; }
-  .screen.active { display: flex; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* TOP BAR */
-  .topbar {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(9,9,16,0.92);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    padding: 16px 20px 12px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-  .topbar-title { font-family: var(--bebas); font-size: 26px; letter-spacing: 2px; color: var(--gold); }
-  .topbar-right { display: flex; gap: 10px; align-items: center; }
-  .icon-btn {
-    width: 36px; height: 36px; border-radius: 10px;
-    background: var(--card); border: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; transition: all 0.15s;
-  }
-  .icon-btn:active { transform: scale(0.92); background: var(--gold-dim); }
-  .icon-btn svg { width: 18px; height: 18px; }
-
-  /* BOTTOM NAV */
-  .bottom-nav {
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
-    background: rgba(9,9,16,0.96);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-top: 1px solid var(--border);
-    display: flex; align-items: center;
-    padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
-  }
-  .nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
-    padding: 6px 4px; cursor: pointer; transition: all 0.15s; position: relative;
-  }
-  .nav-item svg { width: 22px; height: 22px; transition: all 0.2s; }
-  .nav-label { font-size: 9px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: var(--gray2); transition: all 0.2s; }
-  .nav-item.active .nav-label { color: var(--gold); }
-  .nav-item.active svg { filter: drop-shadow(0 0 6px var(--gold)); }
-  .nav-item:active { transform: scale(0.9); }
-  .nav-dot { width: 4px; height: 4px; border-radius: 50%; background: var(--gold); position: absolute; bottom: 2px; display: none; }
-  .nav-item.active .nav-dot { display: block; }
-
-  /* CARDS */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px;
-    margin: 0 16px 12px;
-  }
-  .card-sm { padding: 14px; margin: 0 16px 10px; }
-  .card-title {
-    font-family: var(--bebas); font-size: 13px; letter-spacing: 2px;
-    color: var(--gray); margin-bottom: 14px; text-transform: uppercase;
-  }
-
-  /* SECTION HEADERS */
-  .section-header {
-    padding: 20px 20px 8px;
-    font-family: var(--bebas); font-size: 20px; letter-spacing: 2px; color: var(--gray);
-  }
-
-  /* PROFILE CARD */
-  .profile-hero {
-    margin: 16px 16px 12px;
-    background: linear-gradient(135deg, #111120 0%, #0f0f1e 60%, rgba(201,168,76,0.05) 100%);
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 22px;
-    position: relative;
-    overflow: hidden;
-  }
-  .profile-hero::before {
-    content: '';
-    position: absolute; top: 0; right: 0;
-    width: 140px; height: 140px;
-    background: radial-gradient(circle, rgba(201,168,76,0.08) 0%, transparent 70%);
-  }
-  .profile-top { display: flex; align-items: center; gap: 16px; }
-  .pfp-wrap {
-    width: 72px; height: 72px; border-radius: 50%;
-    border: 2px solid var(--gold);
-    overflow: hidden; flex-shrink: 0;
-    background: var(--bg3);
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; position: relative;
-  }
-  .pfp-wrap img { width: 100%; height: 100%; object-fit: cover; }
-  .pfp-placeholder { font-family: var(--bebas); font-size: 28px; color: var(--gold); }
-  .pfp-edit {
-    position: absolute; bottom: 0; right: 0;
-    width: 22px; height: 22px; border-radius: 50%;
-    background: var(--gold); display: flex; align-items: center; justify-content: center;
-  }
-  .pfp-edit svg { width: 11px; height: 11px; color: var(--bg); }
-  .profile-info { flex: 1; }
-  .profile-username {
-    font-family: var(--bebas); font-size: 28px; letter-spacing: 1px;
-    color: var(--white); line-height: 1;
-  }
-  .profile-level { font-size: 11px; color: var(--gold); font-weight: 600; letter-spacing: 1px; margin-top: 3px; }
-  .xp-bar-wrap { margin-top: 6px; }
-  .xp-label { font-size: 10px; color: var(--gray); margin-bottom: 4px; display: flex; justify-content: space-between; }
-  .xp-bar { height: 4px; background: var(--bg3); border-radius: 99px; overflow: hidden; }
-  .xp-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); border-radius: 99px; transition: width 0.5s ease; }
-  .profile-networth {
-    margin-top: 18px; padding-top: 16px;
-    border-top: 1px solid var(--border);
-    display: flex; justify-content: space-between; align-items: flex-end;
-  }
-  .networth-label { font-size: 11px; color: var(--gray); font-weight: 500; letter-spacing: 1px; text-transform: uppercase; }
-  .networth-value { font-family: var(--bebas); font-size: 34px; color: var(--gold); letter-spacing: 1px; line-height: 1; }
-  .networth-change { font-size: 11px; color: var(--green); font-weight: 600; }
-
-  /* STAT ROWS */
-  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 16px 12px; }
-  .stat-mini {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 14px;
-    display: flex; flex-direction: column; gap: 6px;
-  }
-  .stat-mini-label { font-size: 10px; color: var(--gray); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
-  .stat-mini-val { font-family: var(--bebas); font-size: 22px; color: var(--white); letter-spacing: 0.5px; }
-  .stat-mini-sub { font-size: 10px; color: var(--gray); }
-  .stat-bar { height: 3px; background: var(--bg3); border-radius: 99px; overflow: hidden; margin-top: 4px; }
-  .stat-fill { height: 100%; border-radius: 99px; transition: width 0.4s ease; }
-  .fill-gold { background: var(--gold); }
-  .fill-green { background: var(--green); }
-  .fill-blue { background: var(--blue); }
-  .fill-red { background: var(--red); }
-
-  /* INPUT STYLES */
-  .input-group { margin-bottom: 14px; }
-  .input-label { font-size: 11px; color: var(--gray); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; display: block; }
-  .input-field {
-    width: 100%; background: var(--bg2);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    color: var(--white); font-family: var(--inter); font-size: 15px;
-    padding: 12px 14px; outline: none; transition: border-color 0.2s;
-    -webkit-appearance: none;
-  }
-  .input-field:focus { border-color: var(--gold); }
-  .input-field::placeholder { color: var(--gray2); }
-  select.input-field { cursor: pointer; }
-
-  /* BUTTONS */
-  .btn {
-    width: 100%; padding: 14px;
-    border-radius: var(--radius-sm); border: none;
-    font-family: var(--bebas); font-size: 16px; letter-spacing: 2px;
-    cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px;
-  }
-  .btn:active { transform: scale(0.97); }
-  .btn-gold { background: var(--gold); color: var(--bg); }
-  .btn-gold:hover { background: var(--gold2); }
-  .btn-outline { background: transparent; color: var(--gold); border: 1px solid var(--gold); }
-  .btn-ghost { background: var(--bg3); color: var(--white); border: 1px solid var(--border); }
-  .btn-sm { padding: 10px 14px; font-size: 13px; width: auto; }
-  .btn-danger { background: rgba(224,85,85,0.1); color: var(--red); border: 1px solid rgba(224,85,85,0.3); }
-
-  /* ROW ITEMS */
-  .row-item {
-    display: flex; align-items: center; gap: 14px;
-    padding: 14px 0; border-bottom: 1px solid var(--border);
-  }
-  .row-item:last-child { border-bottom: none; padding-bottom: 0; }
-  .row-icon {
-    width: 40px; height: 40px; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0; font-size: 18px;
-  }
-  .row-info { flex: 1; min-width: 0; }
-  .row-title { font-size: 14px; font-weight: 600; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .row-sub { font-size: 12px; color: var(--gray); margin-top: 2px; }
-  .row-right { text-align: right; flex-shrink: 0; }
-  .row-value { font-family: var(--bebas); font-size: 16px; color: var(--gold); }
-  .row-value-sm { font-size: 12px; color: var(--gray); }
-
-  /* BADGE */
-  .badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 8px; border-radius: 99px;
-    font-size: 10px; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase;
-  }
-  .badge-gold { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
-  .badge-green { background: rgba(76,175,125,0.1); color: var(--green); border: 1px solid rgba(76,175,125,0.3); }
-  .badge-gray { background: rgba(136,136,170,0.1); color: var(--gray); border: 1px solid rgba(136,136,170,0.2); }
-
-  /* TABS */
-  .tabs { display: flex; gap: 6px; padding: 0 16px; margin-bottom: 16px; overflow-x: auto; }
-  .tabs::-webkit-scrollbar { display: none; }
-  .tab {
-    padding: 7px 14px; border-radius: 99px;
-    font-size: 12px; font-weight: 600; letter-spacing: 0.5px;
-    white-space: nowrap; cursor: pointer; transition: all 0.15s;
-    border: 1px solid var(--border); color: var(--gray); background: transparent;
-  }
-  .tab.active { background: var(--gold); color: var(--bg); border-color: var(--gold); }
-
-  /* MODAL */
-  .modal-overlay {
-    position: fixed; inset: 0; z-index: 500;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(6px);
-    display: none; align-items: flex-end; justify-content: center;
-    animation: fadeIn 0.2s ease;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 24px 24px 0 0;
-    padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
-    width: 100%; max-width: 480px;
-    max-height: 90vh; overflow-y: auto;
-    animation: slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1);
-  }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  .modal-handle { width: 36px; height: 4px; background: var(--gray2); border-radius: 99px; margin: 0 auto 20px; }
-  .modal-title { font-family: var(--bebas); font-size: 22px; letter-spacing: 2px; margin-bottom: 20px; }
-
-  /* TOGGLE */
-  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; }
-  .toggle-label { font-size: 14px; color: var(--white); }
-  .toggle { position: relative; width: 44px; height: 24px; }
-  .toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider {
-    position: absolute; inset: 0; border-radius: 99px;
-    background: var(--bg3); border: 1px solid var(--border);
-    cursor: pointer; transition: 0.2s;
-  }
-  .toggle-slider::before {
-    content: ''; position: absolute;
-    width: 18px; height: 18px; border-radius: 50%;
-    background: var(--gray); top: 2px; left: 2px;
-    transition: 0.2s;
-  }
-  .toggle input:checked + .toggle-slider { background: var(--gold-dim); border-color: var(--gold); }
-  .toggle input:checked + .toggle-slider::before { transform: translateX(20px); background: var(--gold); }
-
-  /* DIVIDER */
-  .divider { height: 1px; background: var(--border); margin: 8px 0; }
-
-  /* EMPTY STATE */
-  .empty-state {
-    text-align: center; padding: 48px 24px;
-    display: flex; flex-direction: column; align-items: center; gap: 12px;
-  }
-  .empty-icon { font-size: 40px; opacity: 0.4; }
-  .empty-title { font-family: var(--bebas); font-size: 20px; letter-spacing: 2px; color: var(--gray); }
-  .empty-sub { font-size: 13px; color: var(--gray2); line-height: 1.5; }
-
-  /* PROGRESS RING */
-  .progress-ring { transform: rotate(-90deg); }
-  .progress-ring-bg { fill: none; stroke: var(--bg3); }
-  .progress-ring-fill { fill: none; stroke: var(--gold); stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
-
-  /* NET WORTH BIG */
-  .nw-hero {
-    background: linear-gradient(135deg, var(--card), rgba(201,168,76,0.04));
-    border: 1px solid rgba(201,168,76,0.15);
-    border-radius: 20px; margin: 0 16px 12px; padding: 24px;
-  }
-  .nw-label { font-size: 11px; color: var(--gray); font-weight: 600; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; }
-  .nw-value { font-family: var(--bebas); font-size: 48px; color: var(--gold); letter-spacing: 1px; line-height: 1; }
-  .nw-periods { display: flex; gap: 12px; margin-top: 16px; }
-  .nw-period { flex: 1; }
-  .nw-period-label { font-size: 10px; color: var(--gray2); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-  .nw-period-val { font-size: 16px; font-weight: 700; color: var(--white); margin-top: 3px; }
-  .nw-period-val.positive { color: var(--green); }
-  .nw-period-val.negative { color: var(--red); }
-
-  /* PLATFORM ICON */
-  .platform-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
-
-  /* VERIFIED BADGE */
-  .verified { color: #4A9EFF; font-size: 12px; }
-
-  /* CREW CARD */
-  .crew-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px;
-    margin: 0 16px 10px;
-    display: flex; align-items: center; gap: 14px;
-  }
-  .crew-pfp {
-    width: 48px; height: 48px; border-radius: 50%;
-    border: 2px solid var(--gold-dim);
-    background: var(--bg3); overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--bebas); font-size: 20px; color: var(--gold);
-    flex-shrink: 0;
-  }
-  .crew-pfp img { width: 100%; height: 100%; object-fit: cover; }
-
-  /* ONBOARDING */
-  #onboarding {
-    position: fixed; inset: 0; z-index: 999;
-    background: var(--bg);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 32px 24px;
-    animation: fadeIn 0.3s ease;
-  }
-  .ob-logo { font-family: var(--bebas); font-size: 52px; letter-spacing: 6px; color: var(--gold); margin-bottom: 8px; }
-  .ob-sub { font-size: 13px; color: var(--gray); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 48px; }
-  .ob-form { width: 100%; max-width: 340px; display: flex; flex-direction: column; gap: 14px; }
-
-  /* TOAST */
-  #toast {
-    position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%);
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 99px; padding: 10px 20px;
-    font-size: 13px; font-weight: 600; color: var(--white);
-    z-index: 9999; opacity: 0; transition: opacity 0.2s; white-space: nowrap;
-    pointer-events: none;
-  }
-  #toast.show { opacity: 1; }
-
-  /* SPINNER */
-  .spinner {
-    width: 20px; height: 20px; border-radius: 50%;
-    border: 2px solid var(--border); border-top-color: var(--gold);
-    animation: spin 0.6s linear infinite; display: inline-block;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* CHART BARS */
-  .mini-chart { display: flex; align-items: flex-end; gap: 4px; height: 40px; }
-  .chart-bar { flex: 1; background: var(--gold-dim); border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.4s ease; }
-  .chart-bar.active { background: var(--gold); }
-
-  /* SCROLLABLE HORIZ */
-  .hscroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px 4px; }
-  .hscroll::-webkit-scrollbar { display: none; }
+:root{--bg:#090910;--bg2:#0f0f1a;--bg3:#141424;--card:#111120;--border:rgba(255,255,255,0.06);--gold:#C9A84C;--gold2:#E8C96A;--gold-dim:rgba(201,168,76,0.12);--white:#FFFFFF;--gray:#8888AA;--gray2:#555570;--red:#E05555;--green:#4CAF7D;--blue:#5588EE;--bebas:'Bebas Neue',sans-serif;--inter:'Inter',sans-serif;--radius:16px;--radius-sm:10px}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:var(--bg);color:var(--white);font-family:var(--inter);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:0}
+#app{display:flex;flex-direction:column;min-height:100vh}
+.screen{display:none;flex-direction:column;flex:1;overflow-y:auto;padding-bottom:90px;animation:fadeIn 0.2s ease}
+.screen.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(9,9,16,0.94);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-family:var(--bebas);font-size:26px;letter-spacing:2px;color:var(--gold)}
+.topbar-right{display:flex;gap:10px;align-items:center}
+.icon-btn{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.15s;flex-shrink:0}
+.icon-btn:active{transform:scale(0.92);background:var(--gold-dim)}
+.icon-btn svg{width:18px;height:18px}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;z-index:200;background:rgba(9,9,16,0.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-top:1px solid var(--border);display:flex;align-items:center;padding:8px 0 calc(8px + env(safe-area-inset-bottom))}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 4px;cursor:pointer;transition:all 0.15s;position:relative}
+.nav-item svg{width:22px;height:22px;transition:all 0.2s;stroke:var(--gray2)}
+.nav-label{font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:var(--gray2);transition:all 0.2s}
+.nav-item.active .nav-label{color:var(--gold)}
+.nav-item.active svg{stroke:var(--gold);filter:drop-shadow(0 0 6px rgba(201,168,76,0.5))}
+.nav-item:active{transform:scale(0.88)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin:0 16px 12px}
+.card-title{font-family:var(--bebas);font-size:13px;letter-spacing:2px;color:var(--gray);margin-bottom:14px;text-transform:uppercase}
+.section-header{padding:18px 20px 8px;font-family:var(--bebas);font-size:20px;letter-spacing:2px;color:var(--gray)}
+.profile-hero{margin:16px 16px 12px;background:linear-gradient(135deg,#111120 0%,#0f0f1e 60%,rgba(201,168,76,0.05) 100%);border:1px solid var(--border);border-radius:20px;padding:22px;position:relative;overflow:hidden}
+.profile-hero::before{content:'';position:absolute;top:0;right:0;width:160px;height:160px;background:radial-gradient(circle,rgba(201,168,76,0.07) 0%,transparent 70%)}
+.profile-top{display:flex;align-items:center;gap:16px}
+.pfp-wrap{width:72px;height:72px;border-radius:50%;border:2px solid var(--gold);overflow:hidden;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.pfp-wrap img{width:100%;height:100%;object-fit:cover}
+.pfp-placeholder{font-family:var(--bebas);font-size:28px;color:var(--gold)}
+.pfp-edit{position:absolute;bottom:0;right:0;width:22px;height:22px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center}
+.pfp-edit svg{width:11px;height:11px;stroke:var(--bg)}
+.profile-info{flex:1;min-width:0}
+.profile-username{font-family:var(--bebas);font-size:28px;letter-spacing:1px;color:var(--white);line-height:1}
+.profile-level{font-size:11px;color:var(--gold);font-weight:600;letter-spacing:1px;margin-top:3px}
+.xp-bar-wrap{margin-top:6px}
+.xp-label{font-size:10px;color:var(--gray);margin-bottom:4px;display:flex;justify-content:space-between}
+.xp-bar{height:4px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:99px;transition:width 0.5s ease}
+.profile-networth{margin-top:18px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-end}
+.networth-label{font-size:11px;color:var(--gray);font-weight:500;letter-spacing:1px;text-transform:uppercase}
+.networth-value{font-family:var(--bebas);font-size:34px;color:var(--gold);letter-spacing:1px;line-height:1}
+.networth-change{font-size:11px;color:var(--green);font-weight:600}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 16px 12px}
+.stat-mini{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;display:flex;flex-direction:column;gap:6px;cursor:pointer;transition:border-color 0.2s}
+.stat-mini:active{border-color:var(--gold)}
+.stat-mini-label{font-size:10px;color:var(--gray);font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.stat-mini-val{font-family:var(--bebas);font-size:22px;color:var(--white);letter-spacing:0.5px}
+.stat-mini-sub{font-size:10px;color:var(--gray)}
+.stat-bar{height:3px;background:var(--bg3);border-radius:99px;overflow:hidden;margin-top:4px}
+.stat-fill{height:100%;border-radius:99px;transition:width 0.4s ease}
+.fill-gold{background:var(--gold)}
+.fill-green{background:var(--green)}
+.fill-blue{background:var(--blue)}
+.input-group{margin-bottom:14px}
+.input-label{font-size:11px;color:var(--gray);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;display:block}
+.input-field{width:100%;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--white);font-family:var(--inter);font-size:15px;padding:12px 14px;outline:none;transition:border-color 0.2s;-webkit-appearance:none;appearance:none}
+.input-field:focus{border-color:var(--gold)}
+.input-field::placeholder{color:var(--gray2)}
+select.input-field{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238888AA' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.btn{width:100%;padding:14px;border-radius:var(--radius-sm);border:none;font-family:var(--bebas);font-size:16px;letter-spacing:2px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn:active{transform:scale(0.97)}
+.btn-gold{background:var(--gold);color:var(--bg)}
+.btn-outline{background:transparent;color:var(--gold);border:1px solid var(--gold)}
+.btn-ghost{background:var(--bg3);color:var(--white);border:1px solid var(--border)}
+.btn-danger{background:rgba(224,85,85,0.1);color:var(--red);border:1px solid rgba(224,85,85,0.3)}
+.btn-sm{padding:8px 14px;font-size:12px;width:auto;letter-spacing:1px}
+.row-item{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border)}
+.row-item:last-child{border-bottom:none;padding-bottom:0}
+.row-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+.row-info{flex:1;min-width:0}
+.row-title{font-size:14px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-sub{font-size:12px;color:var(--gray);margin-top:2px}
+.row-right{text-align:right;flex-shrink:0}
+.row-value{font-family:var(--bebas);font-size:16px;color:var(--gold)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:99px;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase}
+.badge-gold{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.3)}
+.badge-green{background:rgba(76,175,125,0.1);color:var(--green);border:1px solid rgba(76,175,125,0.3)}
+.badge-blue{background:rgba(85,136,238,0.1);color:var(--blue);border:1px solid rgba(85,136,238,0.3)}
+.badge-gray{background:rgba(136,136,170,0.1);color:var(--gray);border:1px solid rgba(136,136,170,0.2)}
+.badge-red{background:rgba(224,85,85,0.1);color:var(--red);border:1px solid rgba(224,85,85,0.3)}
+.modal-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:24px 24px 0 0;padding:24px 20px calc(28px + env(safe-area-inset-bottom));width:100%;max-width:500px;max-height:92vh;overflow-y:auto;animation:slideUp 0.25s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-handle{width:36px;height:4px;background:var(--gray2);border-radius:99px;margin:0 auto 20px;cursor:pointer}
+.modal-title{font-family:var(--bebas);font-size:22px;letter-spacing:2px;margin-bottom:20px}
+.nw-hero{background:linear-gradient(135deg,var(--card),rgba(201,168,76,0.04));border:1px solid rgba(201,168,76,0.15);border-radius:20px;margin:0 16px 12px;padding:24px}
+.nw-label{font-size:11px;color:var(--gray);font-weight:600;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.nw-value{font-family:var(--bebas);font-size:44px;color:var(--gold);letter-spacing:1px;line-height:1}
+.nw-periods{display:flex;gap:12px;margin-top:16px}
+.nw-period{flex:1}
+.nw-period-label{font-size:10px;color:var(--gray2);font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.nw-period-val{font-size:15px;font-weight:700;color:var(--white);margin-top:3px}
+.nw-period-val.pos{color:var(--green)}
+.nw-period-val.neg{color:var(--red)}
+.empty-state{text-align:center;padding:40px 24px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.empty-icon{font-size:36px;opacity:0.4}
+.empty-title{font-family:var(--bebas);font-size:18px;letter-spacing:2px;color:var(--gray)}
+.empty-sub{font-size:12px;color:var(--gray2);line-height:1.5;max-width:220px}
+#onboarding{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+.ob-logo{font-family:var(--bebas);font-size:56px;letter-spacing:8px;color:var(--gold);margin-bottom:6px}
+.ob-tagline{font-size:12px;color:var(--gray);letter-spacing:3px;text-transform:uppercase;margin-bottom:52px}
+.ob-form{width:100%;max-width:340px;display:flex;flex-direction:column;gap:14px}
+#toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:rgba(17,17,32,0.95);border:1px solid var(--border);border-radius:99px;padding:10px 20px;font-size:13px;font-weight:600;color:var(--white);z-index:9999;opacity:0;transition:opacity 0.2s;white-space:nowrap;pointer-events:none;backdrop-filter:blur(10px)}
+#toast.show{opacity:1}
+.tut-step{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.tut-step:last-child{border-bottom:none}
+.tut-num{width:26px;height:26px;border-radius:50%;background:var(--gold-dim);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--bebas);font-size:14px;color:var(--gold);flex-shrink:0;margin-top:1px}
+.tut-text{font-size:13px;color:var(--gray);line-height:1.6}
+.tut-text strong{color:var(--white)}
+.asset-img{width:100%;height:160px;border-radius:12px;object-fit:cover;background:var(--bg3);display:flex;align-items:center;justify-content:center;margin-bottom:14px;overflow:hidden;position:relative}
+.asset-img img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.asset-img-placeholder{font-size:48px;opacity:0.3}
+.proj-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.proj-row:last-child{border-bottom:none}
+.proj-year{font-size:12px;color:var(--gray);font-weight:600}
+.proj-val{font-family:var(--bebas);font-size:18px;color:var(--gold)}
+.proj-change{font-size:11px;font-weight:600}
+.divider{height:1px;background:var(--border);margin:12px 0}
+.platform-card{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px}
+.yt-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.yt-stat{background:var(--card);border-radius:8px;padding:10px;text-align:center}
+.yt-stat-val{font-family:var(--bebas);font-size:18px;color:var(--gold)}
+.yt-stat-label{font-size:9px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-top:2px}
+.spinner{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--gold);animation:spin 0.6s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.crew-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin:0 16px 10px;display:flex;align-items:center;gap:14px}
+.crew-pfp{width:48px;height:48px;border-radius:50%;border:2px solid var(--gold-dim);background:var(--bg3);overflow:hidden;display:flex;align-items:center;justify-content:center;font-family:var(--bebas);font-size:20px;color:var(--gold);flex-shrink:0}
 </style>
 </head>
 <body>
@@ -399,50 +147,44 @@
 <!-- ONBOARDING -->
 <div id="onboarding">
   <div class="ob-logo">G.O.L</div>
-  <div class="ob-sub">Game Of Life</div>
+  <div class="ob-tagline">Game Of Life</div>
   <div class="ob-form">
-    <div class="input-group">
+    <div class="input-group" style="margin-bottom:0">
       <label class="input-label">Your Username</label>
-      <input class="input-field" id="ob-username" placeholder="Enter username" maxlength="20">
+      <input class="input-field" id="ob-username" placeholder="Enter username" maxlength="20" style="font-size:16px">
     </div>
-    <button class="btn btn-gold" onclick="finishOnboarding()">
-      START YOUR GAME
-    </button>
+    <button class="btn btn-gold" onclick="finishOnboarding()" style="margin-top:6px">START YOUR GAME</button>
   </div>
 </div>
 
-<!-- MAIN APP -->
+<!-- APP -->
 <div id="app" style="display:none">
 
-  <!-- HOME SCREEN -->
+  <!-- HOME -->
   <div class="screen active" id="screen-home">
     <div class="topbar">
       <div class="topbar-title">G.O.L</div>
       <div class="topbar-right">
+        <div class="icon-btn" onclick="openModal('modal-settings')" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </div>
         <div class="icon-btn" onclick="openModal('modal-edit-profile')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         </div>
       </div>
     </div>
-
-    <!-- PROFILE HERO -->
     <div class="profile-hero">
       <div class="profile-top">
         <div class="pfp-wrap" onclick="triggerPfpUpload()">
           <img id="pfp-img" src="" alt="" style="display:none">
           <div class="pfp-placeholder" id="pfp-initial">?</div>
-          <div class="pfp-edit">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-          </div>
+          <div class="pfp-edit"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
         </div>
         <div class="profile-info">
           <div class="profile-username" id="display-username">PLAYER</div>
           <div class="profile-level" id="display-level">LEVEL 1 · ROOKIE</div>
           <div class="xp-bar-wrap">
-            <div class="xp-label">
-              <span id="xp-current">0 XP</span>
-              <span id="xp-next">1000 XP</span>
-            </div>
+            <div class="xp-label"><span id="xp-current">0 XP</span><span id="xp-next">1000 XP to next level</span></div>
             <div class="xp-bar"><div class="xp-fill" id="xp-bar" style="width:0%"></div></div>
           </div>
         </div>
@@ -458,13 +200,11 @@
         </div>
       </div>
     </div>
-
-    <!-- QUICK STATS -->
     <div class="stat-grid">
       <div class="stat-mini" onclick="navigate('fitness')">
         <div class="stat-mini-label">Fitness</div>
         <div class="stat-mini-val" id="qs-weight">—</div>
-        <div class="stat-mini-sub" id="qs-weight-goal">Set your goal</div>
+        <div class="stat-mini-sub" id="qs-weight-sub">Set your goal</div>
         <div class="stat-bar"><div class="stat-fill fill-green" id="qs-fitness-bar" style="width:0%"></div></div>
       </div>
       <div class="stat-mini" onclick="navigate('money')">
@@ -479,265 +219,140 @@
         <div class="stat-mini-sub">Active skills</div>
         <div class="stat-bar"><div class="stat-fill fill-blue" id="qs-skills-bar" style="width:0%"></div></div>
       </div>
-      <div class="stat-mini" onclick="navigate('social')">
+      <div class="stat-mini" onclick="navigate('more')">
         <div class="stat-mini-label">Social</div>
         <div class="stat-mini-val" id="qs-followers">0</div>
-        <div class="stat-mini-sub">Total following</div>
+        <div class="stat-mini-sub">Total followers</div>
         <div class="stat-bar"><div class="stat-fill fill-gold" id="qs-social-bar" style="width:0%"></div></div>
       </div>
     </div>
-
-    <!-- RECENT ACTIVITY -->
-    <div class="section-header">Recent</div>
+    <div class="section-header">Recent Activity</div>
     <div class="card" id="home-activity">
-      <div class="empty-state" style="padding:24px">
-        <div class="empty-icon">📋</div>
-        <div class="empty-title">No Activity Yet</div>
-        <div class="empty-sub">Start logging your stats and they'll show up here.</div>
-      </div>
+      <div class="empty-state" style="padding:20px"><div class="empty-icon">📋</div><div class="empty-title">No Activity Yet</div><div class="empty-sub">Start logging and it shows up here.</div></div>
     </div>
   </div>
 
-  <!-- MONEY SCREEN -->
+  <!-- MONEY -->
   <div class="screen" id="screen-money">
     <div class="topbar">
       <div class="topbar-title">Money</div>
       <div class="topbar-right">
-        <div class="icon-btn" onclick="openModal('modal-add-income')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </div>
+        <div class="icon-btn" onclick="openModal('modal-add-income')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
       </div>
     </div>
-
     <div class="nw-hero">
-      <div class="nw-label">Total Income</div>
+      <div class="nw-label">Total Income Logged</div>
       <div class="nw-value" id="money-total">$0</div>
       <div class="nw-periods">
-        <div class="nw-period">
-          <div class="nw-period-label">Today</div>
-          <div class="nw-period-val positive" id="money-today">$0</div>
-        </div>
-        <div class="nw-period">
-          <div class="nw-period-label">This Week</div>
-          <div class="nw-period-val positive" id="money-week">$0</div>
-        </div>
-        <div class="nw-period">
-          <div class="nw-period-label">This Month</div>
-          <div class="nw-period-val positive" id="money-month">$0</div>
-        </div>
-        <div class="nw-period">
-          <div class="nw-period-label">This Year</div>
-          <div class="nw-period-val positive" id="money-year">$0</div>
-        </div>
+        <div class="nw-period"><div class="nw-period-label">Today</div><div class="nw-period-val pos" id="money-today">$0</div></div>
+        <div class="nw-period"><div class="nw-period-label">Week</div><div class="nw-period-val pos" id="money-week">$0</div></div>
+        <div class="nw-period"><div class="nw-period-label">Month</div><div class="nw-period-val pos" id="money-month">$0</div></div>
+        <div class="nw-period"><div class="nw-period-label">Year</div><div class="nw-period-val pos" id="money-year">$0</div></div>
       </div>
     </div>
-
     <div class="card">
-      <div class="card-title">Income Goal</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div style="font-size:13px;color:var(--gray)" id="money-goal-label">No goal set</div>
-        <div class="icon-btn" style="width:28px;height:28px" onclick="openModal('modal-money-goal')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        </div>
+        <div class="card-title" style="margin-bottom:0">Monthly Goal</div>
+        <button class="btn btn-outline btn-sm" onclick="openModal('modal-money-goal')">SET GOAL</button>
       </div>
+      <div style="font-size:13px;color:var(--gray);margin-bottom:8px" id="money-goal-label">No goal set</div>
       <div class="stat-bar" style="height:6px"><div class="stat-fill fill-gold" id="money-goal-bar" style="width:0%"></div></div>
     </div>
-
-    <div class="section-header">Work Log</div>
-    <div class="card" id="money-log-list">
-      <div class="empty-state" style="padding:24px">
-        <div class="empty-icon">💰</div>
-        <div class="empty-title">Log Your Income</div>
-        <div class="empty-sub">Track every dollar you make and what you did to earn it.</div>
-      </div>
-    </div>
-
     <div class="section-header">Bank Accounts</div>
     <div class="card" id="bank-list">
-      <div class="empty-state" style="padding:24px">
-        <div class="empty-icon">🏦</div>
-        <div class="empty-title">Connect a Bank</div>
-        <div class="empty-sub">Link Chase, Amex, or any supported bank via Plaid.</div>
-      </div>
+      <div class="empty-state" style="padding:20px"><div class="empty-icon">🏦</div><div class="empty-title">No Banks Connected</div><div class="empty-sub">Connect Chase, Amex or any bank via Plaid.</div></div>
     </div>
-    <div style="padding:0 16px 12px">
-      <button class="btn btn-outline" onclick="connectBank()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-        CONNECT BANK
-      </button>
+    <div style="padding:0 16px 4px"><button class="btn btn-outline" onclick="openModal('modal-plaid-setup')">🏦 CONNECT BANK (PLAID)</button></div>
+    <div class="section-header">Income Log</div>
+    <div class="card" id="money-log-list">
+      <div class="empty-state" style="padding:20px"><div class="empty-icon">💰</div><div class="empty-title">Nothing Logged Yet</div><div class="empty-sub">Tap + to log income.</div></div>
     </div>
   </div>
 
-  <!-- SKILLS SCREEN -->
+  <!-- SKILLS -->
   <div class="screen" id="screen-skills">
     <div class="topbar">
       <div class="topbar-title">Skills</div>
       <div class="topbar-right">
-        <div class="icon-btn" onclick="openModal('modal-add-skill')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </div>
+        <div class="icon-btn" onclick="openModal('modal-add-skill')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
       </div>
     </div>
-
     <div id="skills-list" style="padding-top:8px">
-      <div class="empty-state">
-        <div class="empty-icon">⚡</div>
-        <div class="empty-title">Add A Skill</div>
-        <div class="empty-sub">Boxing, Coding, Trading — add anything you're learning and track your level.</div>
-      </div>
+      <div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">No Skills Added</div><div class="empty-sub">Add anything you're learning — boxing, coding, trading, anything.</div></div>
     </div>
   </div>
 
-  <!-- FITNESS SCREEN -->
+  <!-- FITNESS -->
   <div class="screen" id="screen-fitness">
     <div class="topbar">
       <div class="topbar-title">Fitness</div>
       <div class="topbar-right">
-        <div class="icon-btn" onclick="openModal('modal-log-fitness')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        </div>
+        <div class="icon-btn" onclick="openModal('modal-log-workout')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">Current Stats</div>
       <div class="stat-grid" style="margin:0;gap:10px">
-        <div class="stat-mini">
-          <div class="stat-mini-label">Weight</div>
-          <div class="stat-mini-val" id="fit-weight">—</div>
-          <div class="stat-mini-sub">lbs</div>
-        </div>
-        <div class="stat-mini">
-          <div class="stat-mini-label">Body Fat</div>
-          <div class="stat-mini-val" id="fit-bf">—</div>
-          <div class="stat-mini-sub">percent</div>
-        </div>
-        <div class="stat-mini">
-          <div class="stat-mini-label">Height</div>
-          <div class="stat-mini-val" id="fit-height">—</div>
-          <div class="stat-mini-sub">ft/in</div>
-        </div>
-        <div class="stat-mini">
-          <div class="stat-mini-label">Age</div>
-          <div class="stat-mini-val" id="fit-age">—</div>
-          <div class="stat-mini-sub">years</div>
-        </div>
+        <div class="stat-mini" style="cursor:default"><div class="stat-mini-label">Weight</div><div class="stat-mini-val" id="fit-weight">—</div><div class="stat-mini-sub">lbs</div></div>
+        <div class="stat-mini" style="cursor:default"><div class="stat-mini-label">Body Fat</div><div class="stat-mini-val" id="fit-bf">—</div><div class="stat-mini-sub">%</div></div>
+        <div class="stat-mini" style="cursor:default"><div class="stat-mini-label">Height</div><div class="stat-mini-val" id="fit-height">—</div><div class="stat-mini-sub">ft/in</div></div>
+        <div class="stat-mini" style="cursor:default"><div class="stat-mini-label">Age</div><div class="stat-mini-val" id="fit-age">—</div><div class="stat-mini-sub">years</div></div>
       </div>
     </div>
-
     <div class="card">
-      <div class="card-title">Goals</div>
-      <div class="row-item" style="padding:10px 0">
-        <div class="row-info">
-          <div class="row-title">Goal Weight</div>
-          <div class="row-sub" id="fit-goal-weight-label">Not set</div>
-        </div>
-        <div class="row-right">
-          <div class="row-value" id="fit-goal-weight">—</div>
-        </div>
+      <div class="card-title">Progress to Goal</div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <div><div style="font-size:11px;color:var(--gray)">Current</div><div style="font-family:var(--bebas);font-size:22px;color:var(--white)" id="fit-current-w">—</div></div>
+        <div style="text-align:center"><div style="font-size:11px;color:var(--gray)">Progress</div><div style="font-family:var(--bebas);font-size:22px;color:var(--green)" id="fit-pct">0%</div></div>
+        <div style="text-align:right"><div style="font-size:11px;color:var(--gray)">Goal</div><div style="font-family:var(--bebas);font-size:22px;color:var(--gold)" id="fit-goal-w">—</div></div>
       </div>
-      <div class="row-item" style="padding:10px 0">
-        <div class="row-info">
-          <div class="row-title">Goal Body Fat</div>
-          <div class="row-sub" id="fit-goal-bf-label">Not set</div>
-        </div>
-        <div class="row-right">
-          <div class="row-value" id="fit-goal-bf">—</div>
-        </div>
-      </div>
-      <div style="margin-top:10px">
-        <div style="font-size:11px;color:var(--gray);margin-bottom:6px;letter-spacing:1px;text-transform:uppercase;font-weight:600">Weight Progress</div>
-        <div class="stat-bar" style="height:8px;border-radius:4px">
-          <div class="stat-fill fill-green" id="fit-progress-bar" style="width:0%;border-radius:4px"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-top:4px">
-          <div style="font-size:11px;color:var(--gray)" id="fit-start-label">Start: —</div>
-          <div style="font-size:11px;color:var(--green)" id="fit-progress-pct">0%</div>
-          <div style="font-size:11px;color:var(--gray)" id="fit-goal-label">Goal: —</div>
-        </div>
-      </div>
+      <div class="stat-bar" style="height:8px;border-radius:4px"><div class="stat-fill fill-green" id="fit-progress-bar" style="width:0%;border-radius:4px"></div></div>
     </div>
-    <button class="btn btn-outline" style="margin:0 16px 12px" onclick="openModal('modal-edit-fitness')">EDIT STATS & GOALS</button>
-
+    <div style="padding:0 16px 12px"><button class="btn btn-outline" onclick="openModal('modal-edit-fitness')">EDIT STATS & GOALS</button></div>
     <div class="section-header">Workout Log</div>
     <div class="card" id="workout-log">
-      <div class="empty-state" style="padding:24px">
-        <div class="empty-icon">🥊</div>
-        <div class="empty-title">Log A Workout</div>
-        <div class="empty-sub">Tap + to log today's workout and track your consistency.</div>
-      </div>
+      <div class="empty-state" style="padding:20px"><div class="empty-icon">🥊</div><div class="empty-title">No Workouts Logged</div><div class="empty-sub">Tap + to log today's workout.</div></div>
     </div>
   </div>
 
-  <!-- MORE SCREEN (Social, Real Estate, Assets, Business, LLC, Crypto, Net Worth, Crew) -->
+  <!-- MORE -->
   <div class="screen" id="screen-more">
-    <div class="topbar">
-      <div class="topbar-title">More</div>
+    <div class="topbar"><div class="topbar-title">More</div></div>
+    <div class="stat-grid" style="margin-top:12px">
+      <div class="stat-mini" onclick="openSection('social')"><div class="stat-mini-label">Social</div><div class="stat-mini-val" id="more-followers">0</div><div class="stat-mini-sub">Total followers</div></div>
+      <div class="stat-mini" onclick="openSection('realestate')"><div class="stat-mini-label">Real Estate</div><div class="stat-mini-val" id="more-re-val">$0</div><div class="stat-mini-sub">Portfolio value</div></div>
+      <div class="stat-mini" onclick="openSection('assets')"><div class="stat-mini-label">Assets</div><div class="stat-mini-val" id="more-assets-val">$0</div><div class="stat-mini-sub">Total value</div></div>
+      <div class="stat-mini" onclick="openSection('crypto')"><div class="stat-mini-label">Crypto</div><div class="stat-mini-val" id="more-crypto-val">$0</div><div class="stat-mini-sub">Portfolio</div></div>
     </div>
-
-    <div class="section-header" style="padding-top:12px">Portfolio</div>
-    <div class="stat-grid">
-      <div class="stat-mini" onclick="openSection('social')" style="cursor:pointer">
-        <div class="stat-mini-label">Social</div>
-        <div class="stat-mini-val" id="more-followers">0</div>
-        <div class="stat-mini-sub">Total followers</div>
-      </div>
-      <div class="stat-mini" onclick="openSection('realestate')" style="cursor:pointer">
-        <div class="stat-mini-label">Real Estate</div>
-        <div class="stat-mini-val" id="more-re-val">$0</div>
-        <div class="stat-mini-sub">Portfolio value</div>
-      </div>
-      <div class="stat-mini" onclick="openSection('assets')" style="cursor:pointer">
-        <div class="stat-mini-label">Assets</div>
-        <div class="stat-mini-val" id="more-assets-val">$0</div>
-        <div class="stat-mini-sub">Total value</div>
-      </div>
-      <div class="stat-mini" onclick="openSection('crypto')" style="cursor:pointer">
-        <div class="stat-mini-label">Crypto</div>
-        <div class="stat-mini-val" id="more-crypto-val">$0</div>
-        <div class="stat-mini-sub">Portfolio</div>
-      </div>
-    </div>
-
     <div class="section-header">Business</div>
-    <div class="card" id="more-biz-list">
-      <div class="row-item" onclick="openSection('business')">
+    <div class="card">
+      <div class="row-item" onclick="openSection('business')" style="cursor:pointer">
         <div class="row-icon" style="background:rgba(201,168,76,0.1)">💼</div>
         <div class="row-info"><div class="row-title">Business Tracker</div><div class="row-sub" id="more-biz-count">0 businesses</div></div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gray)"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
-      <div class="row-item" onclick="openSection('llc')">
+      <div class="row-item" onclick="openSection('llc')" style="cursor:pointer">
         <div class="row-icon" style="background:rgba(85,136,238,0.1)">🏛️</div>
         <div class="row-info"><div class="row-title">LLC Tracker</div><div class="row-sub" id="more-llc-count">0 LLCs</div></div>
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--gray)"><polyline points="9 18 15 12 9 6"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--gray)" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
       </div>
     </div>
-
     <div class="section-header">Net Worth</div>
     <div class="nw-hero" onclick="openSection('networth')" style="cursor:pointer">
       <div class="nw-label">Total Net Worth</div>
       <div class="nw-value" id="more-networth">$0</div>
       <div class="nw-periods">
+        <div class="nw-period"><div class="nw-period-label">Real Estate</div><div class="nw-period-val" id="nw-re">$0</div></div>
         <div class="nw-period"><div class="nw-period-label">Assets</div><div class="nw-period-val" id="nw-assets">$0</div></div>
-        <div class="nw-period"><div class="nw-period-label">Liabilities</div><div class="nw-period-val negative" id="nw-liabilities">$0</div></div>
         <div class="nw-period"><div class="nw-period-label">Cash</div><div class="nw-period-val" id="nw-cash">$0</div></div>
+        <div class="nw-period"><div class="nw-period-label">Crypto</div><div class="nw-period-val" id="nw-crypto">$0</div></div>
       </div>
     </div>
-
     <div class="section-header">Crew</div>
     <div id="crew-list">
-      <div class="empty-state">
-        <div class="empty-icon">👥</div>
-        <div class="empty-title">No Crew Yet</div>
-        <div class="empty-sub">Invite your friends and compare stats.</div>
-      </div>
+      <div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No Crew Yet</div><div class="empty-sub">Add your friends to compare stats.</div></div>
     </div>
-    <div style="padding:0 16px 12px">
-      <button class="btn btn-outline" onclick="openModal('modal-crew')">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        ADD CREW MEMBER
-      </button>
-    </div>
+    <div style="padding:0 16px 12px"><button class="btn btn-outline" onclick="openModal('modal-crew')">+ ADD CREW MEMBER</button></div>
   </div>
 
 </div>
@@ -747,44 +362,80 @@
   <div class="nav-item active" onclick="navigate('home')" id="nav-home">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     <div class="nav-label">Home</div>
-    <div class="nav-dot"></div>
   </div>
   <div class="nav-item" onclick="navigate('money')" id="nav-money">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
     <div class="nav-label">Money</div>
-    <div class="nav-dot"></div>
   </div>
   <div class="nav-item" onclick="navigate('skills')" id="nav-skills">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
     <div class="nav-label">Skills</div>
-    <div class="nav-dot"></div>
   </div>
   <div class="nav-item" onclick="navigate('fitness')" id="nav-fitness">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
     <div class="nav-label">Fitness</div>
-    <div class="nav-dot"></div>
   </div>
   <div class="nav-item" onclick="navigate('more')" id="nav-more">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
     <div class="nav-label">More</div>
-    <div class="nav-dot"></div>
   </div>
 </nav>
 
-<!-- MODALS -->
+<!-- ===== MODALS ===== -->
 
 <!-- EDIT PROFILE -->
 <div class="modal-overlay" id="modal-edit-profile">
   <div class="modal">
     <div class="modal-handle" onclick="closeModal('modal-edit-profile')"></div>
     <div class="modal-title">Edit Profile</div>
-    <div class="input-group">
-      <label class="input-label">Username</label>
-      <input class="input-field" id="edit-username" placeholder="Your username" maxlength="20">
-    </div>
+    <div class="input-group"><label class="input-label">Username</label><input class="input-field" id="edit-username" placeholder="Your username" maxlength="20"></div>
     <button class="btn btn-gold" onclick="saveProfile()">SAVE</button>
     <div style="height:10px"></div>
     <button class="btn btn-ghost" onclick="closeModal('modal-edit-profile')">CANCEL</button>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="modal-overlay" id="modal-settings">
+  <div class="modal">
+    <div class="modal-handle" onclick="closeModal('modal-settings')"></div>
+    <div class="modal-title">Settings</div>
+    <div class="card" style="margin:0 0 14px">
+      <div class="card-title">YouTube API Key</div>
+      <div style="font-size:13px;color:var(--gray);line-height:1.6;margin-bottom:14px">Needed to auto-pull stats from your YouTube channels. One time setup — free.</div>
+      <div class="tut-step">
+        <div class="tut-num">1</div>
+        <div class="tut-text">Go to <strong>console.cloud.google.com</strong> and sign in with your Google account</div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">2</div>
+        <div class="tut-text">Click <strong>Select a project → New Project</strong>, name it anything, click Create</div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">3</div>
+        <div class="tut-text">In the search bar type <strong>YouTube Data API v3</strong>, click it, then click <strong>Enable</strong></div>
+      </div>
+      <div class="tut-step">
+        <div class="tut-num">4</div>
+        <div class="tut-text">Go to <strong>Credentials → Create Credentials → API Key</strong>. Copy the key it gives you</div>
+      </div>
+      <div class="tut-step" style="border:none">
+        <div class="tut-num">5</div>
+        <div class="tut-text">Paste it in the box below and tap Save. Done.</div>
+      </div>
+      <div class="divider"></div>
+      <div class="input-group" style="margin-bottom:10px">
+        <label class="input-label">Your API Key</label>
+        <input class="input-field" id="yt-api-key-input" placeholder="AIza..." type="password">
+      </div>
+      <button class="btn btn-gold" onclick="saveYTKey()">SAVE API KEY</button>
+      <div id="yt-key-status" style="text-align:center;font-size:12px;color:var(--green);margin-top:10px;display:none">✓ API Key saved</div>
+    </div>
+    <div class="card" style="margin:0 0 14px">
+      <div class="card-title">Danger Zone</div>
+      <button class="btn btn-danger" onclick="resetApp()">RESET ALL DATA</button>
+    </div>
+    <button class="btn btn-ghost" onclick="closeModal('modal-settings')">CLOSE</button>
   </div>
 </div>
 
@@ -793,21 +444,15 @@
   <div class="modal">
     <div class="modal-handle" onclick="closeModal('modal-add-income')"></div>
     <div class="modal-title">Log Income</div>
-    <div class="input-group">
-      <label class="input-label">Amount ($)</label>
-      <input class="input-field" id="income-amount" type="number" placeholder="0.00" min="0">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Source / Work Done</label>
-      <input class="input-field" id="income-source" placeholder="e.g. YouTube AdSense, Client Payment">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Category</label>
+    <div class="input-group"><label class="input-label">Amount ($)</label><input class="input-field" id="income-amount" type="number" inputmode="decimal" placeholder="0.00" min="0"></div>
+    <div class="input-group"><label class="input-label">Source / What You Did</label><input class="input-field" id="income-source" placeholder="e.g. YouTube AdSense, Client Payment"></div>
+    <div class="input-group"><label class="input-label">Category</label>
       <select class="input-field" id="income-category">
         <option value="content">Content</option>
         <option value="freelance">Freelance</option>
         <option value="business">Business</option>
         <option value="investment">Investment</option>
+        <option value="trading">Trading</option>
         <option value="other">Other</option>
       </select>
     </div>
@@ -821,14 +466,31 @@
 <div class="modal-overlay" id="modal-money-goal">
   <div class="modal">
     <div class="modal-handle" onclick="closeModal('modal-money-goal')"></div>
-    <div class="modal-title">Set Income Goal</div>
-    <div class="input-group">
-      <label class="input-label">Monthly Goal ($)</label>
-      <input class="input-field" id="money-goal-input" type="number" placeholder="10000">
-    </div>
+    <div class="modal-title">Monthly Income Goal</div>
+    <div class="input-group"><label class="input-label">Goal Amount ($)</label><input class="input-field" id="money-goal-input" type="number" inputmode="decimal" placeholder="10000"></div>
     <button class="btn btn-gold" onclick="saveMoneyGoal()">SAVE GOAL</button>
     <div style="height:10px"></div>
     <button class="btn btn-ghost" onclick="closeModal('modal-money-goal')">CANCEL</button>
+  </div>
+</div>
+
+<!-- PLAID SETUP -->
+<div class="modal-overlay" id="modal-plaid-setup">
+  <div class="modal">
+    <div class="modal-handle" onclick="closeModal('modal-plaid-setup')"></div>
+    <div class="modal-title">Connect Bank</div>
+    <div class="card" style="margin:0 0 14px">
+      <div class="card-title">Setup Required (One Time)</div>
+      <div class="tut-step"><div class="tut-num">1</div><div class="tut-text">Go to <strong>plaid.com</strong> → click <strong>Get API Keys</strong> → create a free account</div></div>
+      <div class="tut-step"><div class="tut-num">2</div><div class="tut-text">In your Plaid dashboard, find your <strong>client_id</strong> and <strong>sandbox secret</strong></div></div>
+      <div class="tut-step"><div class="tut-num">3</div><div class="tut-text">Paste them below. Supports Chase, Amex, and 12,000+ other banks.</div></div>
+      <div class="tut-step" style="border:none"><div class="tut-num">4</div><div class="tut-text">Note: Plaid requires a small backend server to run securely. This is the one feature that needs a backend — I can build that for you separately.</div></div>
+    </div>
+    <div class="input-group"><label class="input-label">Plaid Client ID</label><input class="input-field" id="plaid-client-id" placeholder="Paste your client_id"></div>
+    <div class="input-group"><label class="input-label">Plaid Secret</label><input class="input-field" id="plaid-secret" placeholder="Paste your secret" type="password"></div>
+    <button class="btn btn-gold" onclick="savePlaidKeys()">SAVE & CONNECT</button>
+    <div style="height:10px"></div>
+    <button class="btn btn-ghost" onclick="closeModal('modal-plaid-setup')">CANCEL</button>
   </div>
 </div>
 
@@ -837,12 +499,8 @@
   <div class="modal">
     <div class="modal-handle" onclick="closeModal('modal-add-skill')"></div>
     <div class="modal-title">Add Skill</div>
-    <div class="input-group">
-      <label class="input-label">Skill Name</label>
-      <input class="input-field" id="skill-name" placeholder="e.g. Boxing, Coding, Trading">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Current Level</label>
+    <div class="input-group"><label class="input-label">Skill Name</label><input class="input-field" id="skill-name" placeholder="e.g. Boxing, Coding, Trading"></div>
+    <div class="input-group"><label class="input-label">Current Level</label>
       <select class="input-field" id="skill-level">
         <option value="beginner">Beginner</option>
         <option value="novice">Novice</option>
@@ -851,36 +509,24 @@
         <option value="elite">Elite</option>
       </select>
     </div>
-    <div class="input-group">
-      <label class="input-label">Icon (emoji)</label>
-      <input class="input-field" id="skill-icon" placeholder="🥊" maxlength="4">
-    </div>
+    <div class="input-group"><label class="input-label">Icon (emoji)</label><input class="input-field" id="skill-icon" placeholder="⚡" maxlength="4"></div>
     <button class="btn btn-gold" onclick="addSkill()">ADD SKILL</button>
     <div style="height:10px"></div>
     <button class="btn btn-ghost" onclick="closeModal('modal-add-skill')">CANCEL</button>
   </div>
 </div>
 
-<!-- LOG FITNESS -->
-<div class="modal-overlay" id="modal-log-fitness">
+<!-- LOG WORKOUT -->
+<div class="modal-overlay" id="modal-log-workout">
   <div class="modal">
-    <div class="modal-handle" onclick="closeModal('modal-log-fitness')"></div>
+    <div class="modal-handle" onclick="closeModal('modal-log-workout')"></div>
     <div class="modal-title">Log Workout</div>
-    <div class="input-group">
-      <label class="input-label">Workout Type</label>
-      <input class="input-field" id="workout-type" placeholder="e.g. Boxing, Weights, Run">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Duration (minutes)</label>
-      <input class="input-field" id="workout-duration" type="number" placeholder="60">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Notes (optional)</label>
-      <input class="input-field" id="workout-notes" placeholder="How it went...">
-    </div>
+    <div class="input-group"><label class="input-label">Workout Type</label><input class="input-field" id="workout-type" placeholder="e.g. Boxing, Weights, Run"></div>
+    <div class="input-group"><label class="input-label">Duration (minutes)</label><input class="input-field" id="workout-duration" type="number" inputmode="numeric" placeholder="60"></div>
+    <div class="input-group"><label class="input-label">Notes (optional)</label><input class="input-field" id="workout-notes" placeholder="How it went..."></div>
     <button class="btn btn-gold" onclick="logWorkout()">LOG WORKOUT</button>
     <div style="height:10px"></div>
-    <button class="btn btn-ghost" onclick="closeModal('modal-log-fitness')">CANCEL</button>
+    <button class="btn btn-ghost" onclick="closeModal('modal-log-workout')">CANCEL</button>
   </div>
 </div>
 
@@ -890,35 +536,14 @@
     <div class="modal-handle" onclick="closeModal('modal-edit-fitness')"></div>
     <div class="modal-title">Fitness Stats & Goals</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-      <div class="input-group">
-        <label class="input-label">Weight (lbs)</label>
-        <input class="input-field" id="ef-weight" type="number" placeholder="200">
-      </div>
-      <div class="input-group">
-        <label class="input-label">Body Fat %</label>
-        <input class="input-field" id="ef-bf" type="number" placeholder="20">
-      </div>
-      <div class="input-group">
-        <label class="input-label">Height</label>
-        <input class="input-field" id="ef-height" placeholder="5'10">
-      </div>
-      <div class="input-group">
-        <label class="input-label">Age</label>
-        <input class="input-field" id="ef-age" type="number" placeholder="19">
-      </div>
-      <div class="input-group">
-        <label class="input-label">Goal Weight</label>
-        <input class="input-field" id="ef-gw" type="number" placeholder="160">
-      </div>
-      <div class="input-group">
-        <label class="input-label">Goal BF %</label>
-        <input class="input-field" id="ef-gbf" type="number" placeholder="12">
-      </div>
+      <div class="input-group"><label class="input-label">Weight (lbs)</label><input class="input-field" id="ef-weight" type="number" inputmode="decimal" placeholder="200"></div>
+      <div class="input-group"><label class="input-label">Body Fat %</label><input class="input-field" id="ef-bf" type="number" inputmode="decimal" placeholder="20"></div>
+      <div class="input-group"><label class="input-label">Height</label><input class="input-field" id="ef-height" placeholder="5'10"></div>
+      <div class="input-group"><label class="input-label">Age</label><input class="input-field" id="ef-age" type="number" inputmode="numeric" placeholder="19"></div>
+      <div class="input-group"><label class="input-label">Goal Weight</label><input class="input-field" id="ef-gw" type="number" inputmode="decimal" placeholder="160"></div>
+      <div class="input-group"><label class="input-label">Goal BF %</label><input class="input-field" id="ef-gbf" type="number" inputmode="decimal" placeholder="12"></div>
     </div>
-    <div class="input-group">
-      <label class="input-label">Starting Weight (for progress tracking)</label>
-      <input class="input-field" id="ef-sw" type="number" placeholder="228">
-    </div>
+    <div class="input-group"><label class="input-label">Starting Weight (for progress tracking)</label><input class="input-field" id="ef-sw" type="number" inputmode="decimal" placeholder="228"></div>
     <button class="btn btn-gold" onclick="saveFitness()">SAVE</button>
     <div style="height:10px"></div>
     <button class="btn btn-ghost" onclick="closeModal('modal-edit-fitness')">CANCEL</button>
@@ -930,13 +555,10 @@
   <div class="modal">
     <div class="modal-handle" onclick="closeModal('modal-crew')"></div>
     <div class="modal-title">Add Crew Member</div>
+    <div class="input-group"><label class="input-label">Username</label><input class="input-field" id="crew-username" placeholder="Their username"></div>
     <div class="input-group">
-      <label class="input-label">Username</label>
-      <input class="input-field" id="crew-username" placeholder="Their username">
-    </div>
-    <div class="input-group">
-      <label class="input-label">Invite Link</label>
-      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;color:var(--gray);word-break:break-all" id="crew-invite-link">Generate a link to share</div>
+      <label class="input-label">Your Invite Link</label>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--gray);word-break:break-all" id="crew-invite-link">—</div>
     </div>
     <button class="btn btn-ghost" onclick="copyInviteLink()" style="margin-bottom:10px">COPY INVITE LINK</button>
     <button class="btn btn-gold" onclick="addCrewMember()">ADD MEMBER</button>
@@ -945,7 +567,7 @@
   </div>
 </div>
 
-<!-- SECTION MODAL (Social, RE, Assets etc) -->
+<!-- SECTION MODAL -->
 <div class="modal-overlay" id="modal-section">
   <div class="modal" id="modal-section-content">
     <div class="modal-handle" onclick="closeModal('modal-section')"></div>
@@ -955,946 +577,953 @@
 
 <!-- TOAST -->
 <div id="toast"></div>
-
-<!-- HIDDEN FILE INPUT -->
 <input type="file" id="pfp-input" accept="image/*" style="display:none" onchange="handlePfpChange(event)">
+<input type="file" id="asset-img-input" accept="image/*" style="display:none" onchange="handleAssetImgChange(event)">
 
 <script>
 // ============================================================
 // STATE
 // ============================================================
 let state = {
-  username: '',
-  pfp: '',
-  xp: 0,
-  fitness: {},
-  workouts: [],
-  skills: [],
-  income: [],
-  moneyGoal: 0,
-  banks: [],
-  social: [],
-  realEstate: [],
-  assets: [],
-  businesses: [],
-  llcs: [],
-  crypto: [],
-  crew: [],
-  activity: []
+  username:'', pfp:'', xp:0,
+  fitness:{}, workouts:[],
+  skills:[], income:[],
+  moneyGoal:0, banks:[],
+  social:[], realEstate:[],
+  assets:[], businesses:[],
+  llcs:[], crypto:[],
+  crew:[], activity:[],
+  ytApiKey:'', plaidClientId:'', plaidSecret:''
 };
+let pendingAssetImgIndex = null;
 
-// ============================================================
-// STORAGE
-// ============================================================
-function save() {
-  try { localStorage.setItem('gol_state', JSON.stringify(state)); } catch(e) {}
-}
-function load() {
-  try {
-    const s = localStorage.getItem('gol_state');
-    if (s) state = { ...state, ...JSON.parse(s) };
-  } catch(e) {}
-}
+function save(){ try{ localStorage.setItem('gol_v2',JSON.stringify(state)); }catch(e){} }
+function load(){ try{ const s=localStorage.getItem('gol_v2'); if(s) state={...state,...JSON.parse(s)}; }catch(e){} }
 
-// ============================================================
-// INIT
-// ============================================================
 load();
-document.getElementById('home-date').textContent = new Date().toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+document.getElementById('home-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 
-if (state.username) {
-  startApp();
-} else {
-  document.getElementById('onboarding').style.display = 'flex';
+if(state.username){ startApp(); }
+else{ document.getElementById('onboarding').style.display='flex'; }
+
+function finishOnboarding(){
+  const u=document.getElementById('ob-username').value.trim();
+  if(!u){ toast('Enter a username'); return; }
+  state.username=u; save(); startApp();
 }
 
-function finishOnboarding() {
-  const u = document.getElementById('ob-username').value.trim();
-  if (!u) { toast('Enter a username'); return; }
-  state.username = u;
-  save();
-  startApp();
-}
-
-function startApp() {
-  document.getElementById('onboarding').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
-  document.getElementById('bottom-nav').style.display = 'flex';
+function startApp(){
+  document.getElementById('onboarding').style.display='none';
+  document.getElementById('app').style.display='flex';
+  document.getElementById('bottom-nav').style.display='flex';
   renderAll();
 }
 
 // ============================================================
-// NAVIGATION
+// NAV
 // ============================================================
-const screens = ['home','money','skills','fitness','more'];
-
-function navigate(screen) {
-  screens.forEach(s => {
-    document.getElementById(`screen-${s}`)?.classList.remove('active');
-    document.getElementById(`nav-${s}`)?.classList.remove('active');
+function navigate(screen){
+  ['home','money','skills','fitness','more'].forEach(s=>{
+    document.getElementById('screen-'+s)?.classList.remove('active');
+    document.getElementById('nav-'+s)?.classList.remove('active');
   });
-  document.getElementById(`screen-${screen}`)?.classList.add('active');
-  document.getElementById(`nav-${screen}`)?.classList.add('active');
+  document.getElementById('screen-'+screen)?.classList.add('active');
+  document.getElementById('nav-'+screen)?.classList.add('active');
   window.scrollTo(0,0);
 }
 
 // ============================================================
 // MODALS
 // ============================================================
-function openModal(id) {
-  // Pre-fill editable modals
-  if (id === 'modal-edit-profile') {
-    document.getElementById('edit-username').value = state.username || '';
+function openModal(id){
+  if(id==='modal-edit-profile') document.getElementById('edit-username').value=state.username||'';
+  if(id==='modal-edit-fitness'){
+    const f=state.fitness;
+    ['weight','bf','height','age'].forEach(k=>{ if(f[k]) document.getElementById('ef-'+k).value=f[k]; });
+    if(f.goalWeight) document.getElementById('ef-gw').value=f.goalWeight;
+    if(f.goalBf) document.getElementById('ef-gbf').value=f.goalBf;
+    if(f.startWeight) document.getElementById('ef-sw').value=f.startWeight;
   }
-  if (id === 'modal-edit-fitness') {
-    const f = state.fitness;
-    if (f.weight) document.getElementById('ef-weight').value = f.weight;
-    if (f.bf) document.getElementById('ef-bf').value = f.bf;
-    if (f.height) document.getElementById('ef-height').value = f.height;
-    if (f.age) document.getElementById('ef-age').value = f.age;
-    if (f.goalWeight) document.getElementById('ef-gw').value = f.goalWeight;
-    if (f.goalBf) document.getElementById('ef-gbf').value = f.goalBf;
-    if (f.startWeight) document.getElementById('ef-sw').value = f.startWeight;
+  if(id==='modal-money-goal' && state.moneyGoal) document.getElementById('money-goal-input').value=state.moneyGoal;
+  if(id==='modal-settings'){
+    if(state.ytApiKey){ document.getElementById('yt-api-key-input').value=state.ytApiKey; document.getElementById('yt-key-status').style.display='block'; }
+    if(state.plaidClientId) document.getElementById('plaid-client-id').value=state.plaidClientId;
   }
-  if (id === 'modal-money-goal') {
-    if (state.moneyGoal) document.getElementById('money-goal-input').value = state.moneyGoal;
-  }
-  if (id === 'modal-crew') {
-    document.getElementById('crew-invite-link').textContent = `${window.location.origin}${window.location.pathname}?crew=${encodeURIComponent(state.username)}`;
-  }
+  if(id==='modal-crew') document.getElementById('crew-invite-link').textContent=`${window.location.href.split('?')[0]}?crew=${encodeURIComponent(state.username)}`;
   document.getElementById(id).classList.add('open');
 }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(o=>{ o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('open'); }); });
 
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
+// ============================================================
+// SETTINGS
+// ============================================================
+function saveYTKey(){
+  const k=document.getElementById('yt-api-key-input').value.trim();
+  if(!k){ toast('Paste your API key first'); return; }
+  state.ytApiKey=k; save();
+  document.getElementById('yt-key-status').style.display='block';
+  toast('YouTube API key saved ✓');
 }
 
-// Close on overlay click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) overlay.classList.remove('open');
-  });
-});
+function savePlaidKeys(){
+  state.plaidClientId=document.getElementById('plaid-client-id').value.trim();
+  state.plaidSecret=document.getElementById('plaid-secret').value.trim();
+  save(); closeModal('modal-plaid-setup');
+  toast('Plaid keys saved — backend setup needed to activate');
+}
+
+function resetApp(){
+  if(confirm('Reset ALL your data? This cannot be undone.')){
+    localStorage.removeItem('gol_v2');
+    location.reload();
+  }
+}
 
 // ============================================================
 // PFP
 // ============================================================
-function triggerPfpUpload() {
-  document.getElementById('pfp-input').click();
-}
-
-function handlePfpChange(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    state.pfp = ev.target.result;
-    save();
-    renderProfile();
-    toast('Profile photo updated');
-  };
-  reader.readAsDataURL(file);
+function triggerPfpUpload(){ document.getElementById('pfp-input').click(); }
+function handlePfpChange(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{ state.pfp=ev.target.result; save(); renderProfile(); toast('Photo updated'); };
+  r.readAsDataURL(f);
 }
 
 // ============================================================
 // PROFILE
 // ============================================================
-function saveProfile() {
-  const u = document.getElementById('edit-username').value.trim();
-  if (!u) { toast('Enter a username'); return; }
-  state.username = u;
-  save();
-  renderProfile();
-  closeModal('modal-edit-profile');
-  toast('Profile saved');
+function saveProfile(){
+  const u=document.getElementById('edit-username').value.trim();
+  if(!u){ toast('Enter a username'); return; }
+  state.username=u; save(); renderProfile(); closeModal('modal-edit-profile'); toast('Saved');
 }
 
-function renderProfile() {
-  document.getElementById('display-username').textContent = (state.username || 'PLAYER').toUpperCase();
-  const pfpImg = document.getElementById('pfp-img');
-  const pfpInitial = document.getElementById('pfp-initial');
-  if (state.pfp) {
-    pfpImg.src = state.pfp;
-    pfpImg.style.display = 'block';
-    pfpInitial.style.display = 'none';
-  } else {
-    pfpImg.style.display = 'none';
-    pfpInitial.style.display = 'block';
-    pfpInitial.textContent = (state.username || '?')[0].toUpperCase();
-  }
-  // XP & Level
-  const level = Math.floor(state.xp / 1000) + 1;
-  const xpInLevel = state.xp % 1000;
-  const titles = ['ROOKIE','HUSTLER','GRINDER','PLAYER','BIG DAWG','LEGEND','ELITE','ICON','GOD MODE'];
-  const title = titles[Math.min(level - 1, titles.length - 1)];
-  document.getElementById('display-level').textContent = `LEVEL ${level} · ${title}`;
-  document.getElementById('xp-current').textContent = `${xpInLevel} XP`;
-  document.getElementById('xp-next').textContent = '1000 XP';
-  document.getElementById('xp-bar').style.width = `${xpInLevel / 10}%`;
+function renderProfile(){
+  document.getElementById('display-username').textContent=(state.username||'PLAYER').toUpperCase();
+  const pfpImg=document.getElementById('pfp-img'), pfpInit=document.getElementById('pfp-initial');
+  if(state.pfp){ pfpImg.src=state.pfp; pfpImg.style.display='block'; pfpInit.style.display='none'; }
+  else{ pfpImg.style.display='none'; pfpInit.style.display='block'; pfpInit.textContent=(state.username||'?')[0].toUpperCase(); }
+  const lvl=Math.floor(state.xp/1000)+1, xpIn=state.xp%1000;
+  const titles=['ROOKIE','HUSTLER','GRINDER','PLAYER','BIG DAWG','LEGEND','ELITE','ICON','GOD MODE'];
+  document.getElementById('display-level').textContent=`LEVEL ${lvl} · ${titles[Math.min(lvl-1,titles.length-1)]}`;
+  document.getElementById('xp-current').textContent=`${xpIn} XP`;
+  document.getElementById('xp-bar').style.width=`${xpIn/10}%`;
 }
 
 // ============================================================
 // FITNESS
 // ============================================================
-function saveFitness() {
-  state.fitness = {
-    weight: parseFloat(document.getElementById('ef-weight').value) || state.fitness.weight,
-    bf: parseFloat(document.getElementById('ef-bf').value) || state.fitness.bf,
-    height: document.getElementById('ef-height').value || state.fitness.height,
-    age: parseInt(document.getElementById('ef-age').value) || state.fitness.age,
-    goalWeight: parseFloat(document.getElementById('ef-gw').value) || state.fitness.goalWeight,
-    goalBf: parseFloat(document.getElementById('ef-gbf').value) || state.fitness.goalBf,
-    startWeight: parseFloat(document.getElementById('ef-sw').value) || state.fitness.startWeight
+function saveFitness(){
+  state.fitness={
+    weight:parseFloat(document.getElementById('ef-weight').value)||state.fitness.weight,
+    bf:parseFloat(document.getElementById('ef-bf').value)||state.fitness.bf,
+    height:document.getElementById('ef-height').value||state.fitness.height,
+    age:parseInt(document.getElementById('ef-age').value)||state.fitness.age,
+    goalWeight:parseFloat(document.getElementById('ef-gw').value)||state.fitness.goalWeight,
+    goalBf:parseFloat(document.getElementById('ef-gbf').value)||state.fitness.goalBf,
+    startWeight:parseFloat(document.getElementById('ef-sw').value)||state.fitness.startWeight
   };
-  addXP(50);
-  save();
-  renderFitness();
-  closeModal('modal-edit-fitness');
-  toast('Stats saved');
+  addXP(50); addActivity('📊 Fitness stats updated'); save(); renderFitness(); closeModal('modal-edit-fitness'); toast('Stats saved');
 }
 
-function renderFitness() {
-  const f = state.fitness;
-  document.getElementById('fit-weight').textContent = f.weight ? `${f.weight}` : '—';
-  document.getElementById('fit-bf').textContent = f.bf ? `${f.bf}%` : '—';
-  document.getElementById('fit-height').textContent = f.height || '—';
-  document.getElementById('fit-age').textContent = f.age || '—';
-  document.getElementById('fit-goal-weight').textContent = f.goalWeight ? `${f.goalWeight} lbs` : '—';
-  document.getElementById('fit-goal-bf').textContent = f.goalBf ? `${f.goalBf}%` : '—';
-  document.getElementById('fit-goal-weight-label').textContent = f.goalWeight ? 'Target weight' : 'Not set';
-  document.getElementById('fit-goal-bf-label').textContent = f.goalBf ? 'Target body fat' : 'Not set';
-
-  // Progress bar
-  if (f.startWeight && f.goalWeight && f.weight) {
-    const total = f.startWeight - f.goalWeight;
-    const done = f.startWeight - f.weight;
-    const pct = Math.max(0, Math.min(100, (done / total) * 100));
-    document.getElementById('fit-progress-bar').style.width = `${pct}%`;
-    document.getElementById('fit-progress-pct').textContent = `${Math.round(pct)}%`;
-    document.getElementById('fit-start-label').textContent = `Start: ${f.startWeight} lbs`;
-    document.getElementById('fit-goal-label').textContent = `Goal: ${f.goalWeight} lbs`;
+function renderFitness(){
+  const f=state.fitness;
+  document.getElementById('fit-weight').textContent=f.weight?`${f.weight}`:'—';
+  document.getElementById('fit-bf').textContent=f.bf?`${f.bf}%`:'—';
+  document.getElementById('fit-height').textContent=f.height||'—';
+  document.getElementById('fit-age').textContent=f.age||'—';
+  document.getElementById('fit-current-w').textContent=f.weight?`${f.weight} lbs`:'—';
+  document.getElementById('fit-goal-w').textContent=f.goalWeight?`${f.goalWeight} lbs`:'—';
+  if(f.startWeight&&f.goalWeight&&f.weight){
+    const total=f.startWeight-f.goalWeight, done=f.startWeight-f.weight;
+    const pct=Math.max(0,Math.min(100,Math.round((done/total)*100)));
+    document.getElementById('fit-progress-bar').style.width=`${pct}%`;
+    document.getElementById('fit-pct').textContent=`${pct}%`;
   }
-
-  // Quick stats
-  document.getElementById('qs-weight').textContent = f.weight ? `${f.weight} lbs` : '—';
-  document.getElementById('qs-weight-goal').textContent = f.goalWeight ? `Goal: ${f.goalWeight} lbs` : 'Set your goal';
-
-  // Workout log render
+  document.getElementById('qs-weight').textContent=f.weight?`${f.weight} lbs`:'—';
+  document.getElementById('qs-weight-sub').textContent=f.goalWeight?`Goal: ${f.goalWeight} lbs`:'Set your goal';
+  if(f.startWeight&&f.goalWeight&&f.weight){
+    const total=f.startWeight-f.goalWeight, done=f.startWeight-f.weight;
+    document.getElementById('qs-fitness-bar').style.width=`${Math.max(0,Math.min(100,(done/total)*100))}%`;
+  }
   renderWorkoutLog();
 }
 
-function logWorkout() {
-  const type = document.getElementById('workout-type').value.trim();
-  const duration = document.getElementById('workout-duration').value;
-  if (!type) { toast('Enter workout type'); return; }
-  state.workouts.unshift({ type, duration: duration || '—', notes: document.getElementById('workout-notes').value.trim(), date: new Date().toLocaleDateString() });
-  addXP(100);
-  addActivity(`💪 ${type} workout logged`);
-  save();
-  renderFitness();
-  closeModal('modal-log-fitness');
-  document.getElementById('workout-type').value = '';
-  document.getElementById('workout-duration').value = '';
-  document.getElementById('workout-notes').value = '';
+function logWorkout(){
+  const type=document.getElementById('workout-type').value.trim();
+  if(!type){ toast('Enter workout type'); return; }
+  state.workouts.unshift({type,duration:document.getElementById('workout-duration').value||'—',notes:document.getElementById('workout-notes').value.trim(),date:new Date().toLocaleDateString()});
+  addXP(100); addActivity(`💪 ${type} logged`); save(); renderFitness(); closeModal('modal-log-workout');
+  document.getElementById('workout-type').value=''; document.getElementById('workout-duration').value=''; document.getElementById('workout-notes').value='';
   toast('Workout logged');
 }
 
-function renderWorkoutLog() {
-  const el = document.getElementById('workout-log');
-  if (!state.workouts.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:24px"><div class="empty-icon">🥊</div><div class="empty-title">Log A Workout</div><div class="empty-sub">Tap + to log today's workout.</div></div>`;
-    return;
-  }
-  el.innerHTML = state.workouts.slice(0,10).map(w => `
+function renderWorkoutLog(){
+  const el=document.getElementById('workout-log');
+  if(!state.workouts.length){ el.innerHTML='<div class="empty-state" style="padding:20px"><div class="empty-icon">🥊</div><div class="empty-title">No Workouts Yet</div><div class="empty-sub">Tap + to log today\'s session.</div></div>'; return; }
+  el.innerHTML=state.workouts.slice(0,15).map(w=>`
     <div class="row-item">
       <div class="row-icon" style="background:rgba(76,175,125,0.1)">💪</div>
-      <div class="row-info"><div class="row-title">${w.type}</div><div class="row-sub">${w.date} · ${w.duration} min${w.notes ? ' · ' + w.notes : ''}</div></div>
+      <div class="row-info"><div class="row-title">${w.type}</div><div class="row-sub">${w.date} · ${w.duration} min${w.notes?' · '+w.notes:''}</div></div>
       <div class="badge badge-green">+100 XP</div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
 // ============================================================
 // SKILLS
 // ============================================================
-function addSkill() {
-  const name = document.getElementById('skill-name').value.trim();
-  if (!name) { toast('Enter a skill name'); return; }
-  const levels = { beginner:10, novice:25, intermediate:50, advanced:75, elite:100 };
-  const levelKey = document.getElementById('skill-level').value;
-  state.skills.push({
-    name, level: levelKey, icon: document.getElementById('skill-icon').value || '⚡',
-    progress: levels[levelKey], logs: []
-  });
-  addXP(75);
-  addActivity(`⚡ New skill added: ${name}`);
-  save();
-  renderSkills();
-  closeModal('modal-add-skill');
-  document.getElementById('skill-name').value = '';
-  document.getElementById('skill-icon').value = '';
+function addSkill(){
+  const name=document.getElementById('skill-name').value.trim();
+  if(!name){ toast('Enter a skill name'); return; }
+  const lvls={beginner:10,novice:25,intermediate:50,advanced:75,elite:100};
+  const levelKey=document.getElementById('skill-level').value;
+  state.skills.push({name,level:levelKey,icon:document.getElementById('skill-icon').value||'⚡',progress:lvls[levelKey]});
+  addXP(75); addActivity(`⚡ New skill: ${name}`); save(); renderSkills(); closeModal('modal-add-skill');
+  document.getElementById('skill-name').value=''; document.getElementById('skill-icon').value='';
   toast('Skill added');
 }
 
-function renderSkills() {
-  const el = document.getElementById('skills-list');
-  if (!state.skills.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">Add A Skill</div><div class="empty-sub">Boxing, Coding, Trading — track everything you're leveling up.</div></div>`;
-    document.getElementById('qs-skills').textContent = '0';
-    return;
-  }
-  document.getElementById('qs-skills').textContent = state.skills.length;
-  const pct = Math.min(100, (state.skills.length / 10) * 100);
-  document.getElementById('qs-skills-bar').style.width = `${pct}%`;
-
-  el.innerHTML = state.skills.map((s, i) => `
-    <div class="card card-sm" style="cursor:pointer" onclick="openSkillDetail(${i})">
+function renderSkills(){
+  const el=document.getElementById('skills-list');
+  document.getElementById('qs-skills').textContent=state.skills.length;
+  document.getElementById('qs-skills-bar').style.width=`${Math.min(100,state.skills.length*10)}%`;
+  if(!state.skills.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">⚡</div><div class="empty-title">No Skills Added</div><div class="empty-sub">Add anything you\'re learning.</div></div>'; return; }
+  el.innerHTML=state.skills.map((s,i)=>`
+    <div class="card" style="cursor:pointer" onclick="openSkillDetail(${i})">
       <div style="display:flex;align-items:center;gap:14px">
         <div class="row-icon" style="background:var(--gold-dim);font-size:20px">${s.icon}</div>
         <div style="flex:1">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
             <div style="font-size:15px;font-weight:700">${s.name}</div>
             <div class="badge badge-gold">${s.level.toUpperCase()}</div>
           </div>
           <div class="stat-bar"><div class="stat-fill fill-gold" style="width:${s.progress}%"></div></div>
         </div>
-        <div style="text-align:right">
-          <div style="font-family:var(--bebas);font-size:22px;color:var(--gold)">${s.progress}%</div>
-        </div>
+        <div style="font-family:var(--bebas);font-size:26px;color:var(--gold)">${s.progress}%</div>
       </div>
-    </div>
-  `).join('');
+    </div>`).join('');
 }
 
-function openSkillDetail(i) {
-  const s = state.skills[i];
-  const inner = document.getElementById('section-inner');
-  inner.innerHTML = `
+function openSkillDetail(i){
+  const s=state.skills[i];
+  document.getElementById('section-inner').innerHTML=`
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
-      <div style="font-size:36px">${s.icon}</div>
-      <div>
-        <div style="font-family:var(--bebas);font-size:24px;letter-spacing:1px">${s.name}</div>
-        <div class="badge badge-gold" style="margin-top:4px">${s.level.toUpperCase()}</div>
-      </div>
+      <div style="font-size:40px">${s.icon}</div>
+      <div><div style="font-family:var(--bebas);font-size:26px">${s.name}</div><div class="badge badge-gold" style="margin-top:4px">${s.level.toUpperCase()}</div></div>
     </div>
     <div class="card" style="margin:0 0 14px">
-      <div class="card-title">Progress</div>
-      <div style="font-family:var(--bebas);font-size:36px;color:var(--gold);margin-bottom:8px">${s.progress}%</div>
+      <div style="font-family:var(--bebas);font-size:48px;color:var(--gold);margin-bottom:8px">${s.progress}%</div>
       <div class="stat-bar" style="height:8px;border-radius:4px"><div class="stat-fill fill-gold" style="width:${s.progress}%;border-radius:4px"></div></div>
     </div>
     <div style="display:flex;gap:10px;margin-bottom:14px">
-      <button class="btn btn-gold btn-sm" onclick="levelUpSkill(${i})">LEVEL UP +10%</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteSkill(${i});closeModal('modal-section')">DELETE</button>
-    </div>
-  `;
+      <button class="btn btn-gold btn-sm" onclick="levelUpSkill(${i})" style="flex:1">+ LEVEL UP</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteSkill(${i})" style="flex:1">DELETE</button>
+    </div>`;
   openModal('modal-section');
 }
 
-function levelUpSkill(i) {
-  state.skills[i].progress = Math.min(100, state.skills[i].progress + 10);
-  if (state.skills[i].progress >= 100) state.skills[i].level = 'elite';
-  addXP(50);
-  save();
-  renderSkills();
-  openSkillDetail(i);
-  toast(`${state.skills[i].name} leveled up!`);
+function levelUpSkill(i){
+  state.skills[i].progress=Math.min(100,state.skills[i].progress+10);
+  if(state.skills[i].progress>=100) state.skills[i].level='elite';
+  addXP(50); save(); renderSkills(); openSkillDetail(i); toast(`${state.skills[i].name} leveled up!`);
 }
 
-function deleteSkill(i) {
-  state.skills.splice(i, 1);
-  save();
-  renderSkills();
-  toast('Skill removed');
-}
+function deleteSkill(i){ state.skills.splice(i,1); save(); renderSkills(); closeModal('modal-section'); toast('Skill removed'); }
 
 // ============================================================
 // MONEY
 // ============================================================
-function addIncome() {
-  const amount = parseFloat(document.getElementById('income-amount').value);
-  if (!amount || amount <= 0) { toast('Enter a valid amount'); return; }
-  const source = document.getElementById('income-source').value.trim() || 'Income';
-  const category = document.getElementById('income-category').value;
-  state.income.unshift({ amount, source, category, date: new Date().toISOString() });
-  addXP(50);
-  addActivity(`💰 $${amount.toLocaleString()} — ${source}`);
-  save();
-  renderMoney();
-  closeModal('modal-add-income');
-  document.getElementById('income-amount').value = '';
-  document.getElementById('income-source').value = '';
+function addIncome(){
+  const amount=parseFloat(document.getElementById('income-amount').value);
+  if(!amount||amount<=0){ toast('Enter a valid amount'); return; }
+  const source=document.getElementById('income-source').value.trim()||'Income';
+  state.income.unshift({amount,source,category:document.getElementById('income-category').value,date:new Date().toISOString()});
+  addXP(50); addActivity(`💰 $${amount.toLocaleString()} — ${source}`); save(); renderMoney(); closeModal('modal-add-income');
+  document.getElementById('income-amount').value=''; document.getElementById('income-source').value='';
   toast(`$${amount.toLocaleString()} logged`);
 }
 
-function saveMoneyGoal() {
-  const g = parseFloat(document.getElementById('money-goal-input').value);
-  if (!g) { toast('Enter a goal amount'); return; }
-  state.moneyGoal = g;
-  save();
-  renderMoney();
-  closeModal('modal-money-goal');
-  toast('Goal saved');
+function saveMoneyGoal(){
+  const g=parseFloat(document.getElementById('money-goal-input').value);
+  if(!g){ toast('Enter a goal'); return; }
+  state.moneyGoal=g; save(); renderMoney(); closeModal('modal-money-goal'); toast('Goal saved');
 }
 
-function renderMoney() {
-  const now = new Date();
-  const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const startOfWeek = new Date(now);
-  startOfWeek.setDate(now.getDate() - now.getDay());
-  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const startOfYear = new Date(now.getFullYear(), 0, 1);
-
-  const total = state.income.reduce((s, i) => s + i.amount, 0);
-  const today = state.income.filter(i => new Date(i.date) >= startOfDay).reduce((s, i) => s + i.amount, 0);
-  const week = state.income.filter(i => new Date(i.date) >= startOfWeek).reduce((s, i) => s + i.amount, 0);
-  const month = state.income.filter(i => new Date(i.date) >= startOfMonth).reduce((s, i) => s + i.amount, 0);
-  const year = state.income.filter(i => new Date(i.date) >= startOfYear).reduce((s, i) => s + i.amount, 0);
-
-  document.getElementById('money-total').textContent = '$' + total.toLocaleString();
-  document.getElementById('money-today').textContent = '$' + today.toLocaleString();
-  document.getElementById('money-week').textContent = '$' + week.toLocaleString();
-  document.getElementById('money-month').textContent = '$' + month.toLocaleString();
-  document.getElementById('money-year').textContent = '$' + year.toLocaleString();
-
-  document.getElementById('qs-income').textContent = '$' + month.toLocaleString();
-
-  if (state.moneyGoal) {
-    const pct = Math.min(100, (month / state.moneyGoal) * 100);
-    document.getElementById('money-goal-label').textContent = `$${month.toLocaleString()} of $${state.moneyGoal.toLocaleString()} monthly goal`;
-    document.getElementById('money-goal-bar').style.width = `${pct}%`;
-    document.getElementById('qs-money-bar').style.width = `${pct}%`;
+function renderMoney(){
+  const now=new Date();
+  const sod=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const sow=new Date(now); sow.setDate(now.getDate()-now.getDay());
+  const som=new Date(now.getFullYear(),now.getMonth(),1);
+  const soy=new Date(now.getFullYear(),0,1);
+  const sum=(arr,from)=>arr.filter(i=>new Date(i.date)>=from).reduce((s,i)=>s+i.amount,0);
+  const total=state.income.reduce((s,i)=>s+i.amount,0);
+  document.getElementById('money-total').textContent='$'+total.toLocaleString();
+  document.getElementById('money-today').textContent='$'+sum(state.income,sod).toLocaleString();
+  document.getElementById('money-week').textContent='$'+sum(state.income,sow).toLocaleString();
+  const month=sum(state.income,som);
+  document.getElementById('money-month').textContent='$'+month.toLocaleString();
+  document.getElementById('money-year').textContent='$'+sum(state.income,soy).toLocaleString();
+  document.getElementById('qs-income').textContent='$'+month.toLocaleString();
+  if(state.moneyGoal){
+    const pct=Math.min(100,(month/state.moneyGoal)*100);
+    document.getElementById('money-goal-label').textContent=`$${month.toLocaleString()} of $${state.moneyGoal.toLocaleString()} goal`;
+    document.getElementById('money-goal-bar').style.width=`${pct}%`;
+    document.getElementById('qs-money-bar').style.width=`${pct}%`;
   }
-
-  const list = document.getElementById('money-log-list');
-  if (!state.income.length) {
-    list.innerHTML = `<div class="empty-state" style="padding:24px"><div class="empty-icon">💰</div><div class="empty-title">Log Your Income</div><div class="empty-sub">Track every dollar you make.</div></div>`;
-  } else {
-    const cats = { content:'📹', freelance:'💼', business:'🏢', investment:'📈', other:'💵' };
-    list.innerHTML = state.income.slice(0,20).map(i => `
-      <div class="row-item">
-        <div class="row-icon" style="background:var(--gold-dim)">${cats[i.category] || '💵'}</div>
-        <div class="row-info"><div class="row-title">${i.source}</div><div class="row-sub">${new Date(i.date).toLocaleDateString()} · ${i.category}</div></div>
-        <div class="row-value">$${i.amount.toLocaleString()}</div>
-      </div>
-    `).join('');
-  }
-
+  const cats={content:'📹',freelance:'💼',business:'🏢',investment:'📈',trading:'📊',other:'💵'};
+  const list=document.getElementById('money-log-list');
+  if(!state.income.length){ list.innerHTML='<div class="empty-state" style="padding:20px"><div class="empty-icon">💰</div><div class="empty-title">Nothing Logged Yet</div></div>'; }
+  else{ list.innerHTML=state.income.slice(0,25).map(i=>`
+    <div class="row-item">
+      <div class="row-icon" style="background:var(--gold-dim)">${cats[i.category]||'💵'}</div>
+      <div class="row-info"><div class="row-title">${i.source}</div><div class="row-sub">${new Date(i.date).toLocaleDateString()} · ${i.category}</div></div>
+      <div class="row-value">$${i.amount.toLocaleString()}</div>
+    </div>`).join(''); }
   updateNetWorth();
 }
 
 // ============================================================
 // NET WORTH
 // ============================================================
-function calcNetWorth() {
-  const income = state.income.reduce((s, i) => s + i.amount, 0);
-  const re = state.realEstate.reduce((s, p) => s + (p.currentValue || 0), 0);
-  const assets = state.assets.reduce((s, a) => s + (a.value || 0), 0);
-  const crypto = state.crypto.reduce((s, c) => s + (c.value || 0), 0);
-  const biz = state.businesses.reduce((s, b) => s + (b.value || 0), 0);
-  return income + re + assets + crypto + biz;
+function calcNetWorth(){
+  const cash=state.income.reduce((s,i)=>s+i.amount,0);
+  const re=state.realEstate.reduce((s,p)=>s+(p.currentValue||0),0);
+  const assets=state.assets.reduce((s,a)=>s+(a.value||0),0);
+  const crypto=state.crypto.reduce((s,c)=>s+(c.value||0),0);
+  const biz=state.businesses.reduce((s,b)=>s+(b.value||0),0);
+  return cash+re+assets+crypto+biz;
 }
-
-function updateNetWorth() {
-  const nw = calcNetWorth();
-  const fmt = v => v >= 1000000 ? `$${(v/1000000).toFixed(2)}M` : v >= 1000 ? `$${(v/1000).toFixed(1)}K` : `$${v.toLocaleString()}`;
-  document.getElementById('home-networth').textContent = fmt(nw);
-  document.getElementById('more-networth').textContent = fmt(nw);
-  const income = state.income.reduce((s,i) => s + i.amount, 0);
-  const re = state.realEstate.reduce((s,p) => s + (p.currentValue||0), 0);
-  const assets = state.assets.reduce((s,a) => s + (a.value||0), 0);
-  document.getElementById('nw-assets').textContent = fmt(re + assets);
-  document.getElementById('nw-cash').textContent = fmt(income);
-  const today = new Date();
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const todayIncome = state.income.filter(i => new Date(i.date) >= startOfDay).reduce((s,i) => s+i.amount, 0);
-  document.getElementById('home-nw-change').textContent = `+$${todayIncome.toLocaleString()} today`;
+function fmt(v){ return v>=1000000?`$${(v/1000000).toFixed(2)}M`:v>=1000?`$${(v/1000).toFixed(1)}K`:`$${Math.round(v).toLocaleString()}`; }
+function updateNetWorth(){
+  const nw=calcNetWorth();
+  document.getElementById('home-networth').textContent=fmt(nw);
+  document.getElementById('more-networth').textContent=fmt(nw);
+  const re=state.realEstate.reduce((s,p)=>s+(p.currentValue||0),0);
+  const assets=state.assets.reduce((s,a)=>s+(a.value||0),0);
+  const cash=state.income.reduce((s,i)=>s+i.amount,0);
+  const crypto=state.crypto.reduce((s,c)=>s+(c.value||0),0);
+  document.getElementById('nw-re').textContent=fmt(re);
+  document.getElementById('nw-assets').textContent=fmt(assets);
+  document.getElementById('nw-cash').textContent=fmt(cash);
+  document.getElementById('nw-crypto').textContent=fmt(crypto);
+  const sod=new Date(); sod.setHours(0,0,0,0);
+  const todayIncome=state.income.filter(i=>new Date(i.date)>=sod).reduce((s,i)=>s+i.amount,0);
+  document.getElementById('home-nw-change').textContent=`+$${todayIncome.toLocaleString()} today`;
 }
 
 // ============================================================
-// SOCIAL
+// YOUTUBE — REAL API
 // ============================================================
-function openSection(section) {
-  const inner = document.getElementById('section-inner');
-  if (section === 'social') {
-    inner.innerHTML = `
+async function fetchYTChannel(handle, idx){
+  const key=state.ytApiKey;
+  if(!key){ toast('Add your YouTube API key in Settings first'); return null; }
+  const el=document.getElementById(`yt-status-${idx}`);
+  if(el) el.innerHTML='<span class="spinner"></span>';
+  try{
+    // Resolve channel handle/URL to channel ID
+    let channelId='';
+    const cleanHandle=handle.replace(/https?:\/\/(www\.)?youtube\.com\//,'').replace(/^@/,'').replace(/channel\//,'').split('/')[0].split('?')[0];
+    // Try as channel ID first (starts with UC)
+    if(cleanHandle.startsWith('UC') && cleanHandle.length===24){
+      channelId=cleanHandle;
+    } else {
+      // Search by username/handle
+      const searchRes=await fetch(`https://www.googleapis.com/youtube/v3/search?part=snippet&type=channel&q=${encodeURIComponent(cleanHandle)}&key=${key}`);
+      const searchData=await searchRes.json();
+      if(searchData.error){ throw new Error(searchData.error.message); }
+      if(searchData.items&&searchData.items.length>0){ channelId=searchData.items[0].snippet.channelId; }
+      else{ throw new Error('Channel not found'); }
+    }
+    // Get channel stats
+    const statsRes=await fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics,snippet&id=${channelId}&key=${key}`);
+    const statsData=await statsRes.json();
+    if(statsData.error){ throw new Error(statsData.error.message); }
+    if(!statsData.items||!statsData.items.length){ throw new Error('No data returned'); }
+    const ch=statsData.items[0];
+    return {
+      channelId,
+      title:ch.snippet.title,
+      thumbnail:ch.snippet.thumbnails?.default?.url||'',
+      subscribers:parseInt(ch.statistics.subscriberCount)||0,
+      views:parseInt(ch.statistics.viewCount)||0,
+      videos:parseInt(ch.statistics.videoCount)||0,
+      verified:ch.status?.isLinked||false,
+      lastFetched:new Date().toISOString()
+    };
+  } catch(err){
+    if(el) el.innerHTML=`<span style="color:var(--red);font-size:12px">Error: ${err.message}</span>`;
+    toast('YouTube error: '+err.message);
+    return null;
+  }
+}
+
+// ============================================================
+// SOCIAL SECTION
+// ============================================================
+function openSection(section){
+  const inner=document.getElementById('section-inner');
+  if(section==='social'){
+    inner.innerHTML=`
       <div class="modal-title">Social</div>
       <div id="social-platforms-list"></div>
-      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:14px">
         <div class="input-group"><label class="input-label">Platform</label>
-          <select class="input-field" id="s-platform">
+          <select class="input-field" id="s-platform" onchange="toggleYTNote()">
             <option value="youtube">YouTube</option>
             <option value="instagram">Instagram</option>
             <option value="tiktok">TikTok</option>
           </select>
         </div>
-        <div class="input-group"><label class="input-label">Channel URL or Username</label>
-          <input class="input-field" id="s-handle" placeholder="@username or full URL"></div>
-        <div id="yt-fetch-info" style="font-size:12px;color:var(--gray);display:none">YouTube stats will auto-load. You may need to add your YouTube API key in settings.</div>
+        <div class="input-group"><label class="input-label">Channel URL or @username</label><input class="input-field" id="s-handle" placeholder="@username or youtube.com/..."></div>
+        <div id="yt-note" style="background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:12px;font-size:12px;color:var(--gold);line-height:1.6">
+          📺 YouTube will auto-pull real stats. Make sure your API key is saved in Settings first.
+        </div>
+        <div id="manual-note" style="font-size:12px;color:var(--gray);display:none;line-height:1.6">📱 Instagram & TikTok require manual follower updates (tap UPDATE on each account to enter current count).</div>
         <button class="btn btn-gold" onclick="addPlatform()">ADD PLATFORM</button>
-      </div>
-    `;
-    document.getElementById('s-platform').addEventListener('change', function() {
-      document.getElementById('yt-fetch-info').style.display = this.value === 'youtube' ? 'block' : 'none';
-    });
+      </div>`;
     renderSocialList();
-  } else if (section === 'realestate') {
-    inner.innerHTML = `
+  } else if(section==='realestate'){
+    inner.innerHTML=`
       <div class="modal-title">Real Estate</div>
       <div id="re-list"></div>
-      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
         <div class="input-group"><label class="input-label">Property Name</label><input class="input-field" id="re-name" placeholder="e.g. Henderson House"></div>
-        <div class="input-group"><label class="input-label">Type</label>
-          <select class="input-field" id="re-type"><option value="own">Own</option><option value="rent">Renting</option></select></div>
-        <div class="input-group"><label class="input-label">Current Value ($)</label><input class="input-field" id="re-val" type="number" placeholder="400000"></div>
-        <div class="input-group"><label class="input-label">Monthly Cost ($)</label><input class="input-field" id="re-cost" type="number" placeholder="2500"></div>
+        <div class="input-group"><label class="input-label">Type</label><select class="input-field" id="re-type"><option value="own">Own</option><option value="rent">Renting</option></select></div>
+        <div class="input-group"><label class="input-label">Property Type</label><select class="input-field" id="re-ptype"><option value="house">Single Family House</option><option value="condo">Condo/Apartment</option><option value="multi">Multi-Family</option><option value="commercial">Commercial</option><option value="land">Land</option></select></div>
+        <div class="input-group"><label class="input-label">Current Value ($)</label><input class="input-field" id="re-val" type="number" inputmode="decimal" placeholder="400000"></div>
+        <div class="input-group"><label class="input-label">Monthly Cost ($)</label><input class="input-field" id="re-cost" type="number" inputmode="decimal" placeholder="2500"></div>
         <button class="btn btn-gold" onclick="addProperty()">ADD PROPERTY</button>
-      </div>
-    `;
+      </div>`;
     renderREList();
-  } else if (section === 'assets') {
-    inner.innerHTML = `
+  } else if(section==='assets'){
+    inner.innerHTML=`
       <div class="modal-title">Assets</div>
       <div id="assets-list"></div>
-      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
         <div class="input-group"><label class="input-label">Asset Name</label><input class="input-field" id="as-name" placeholder="e.g. 2022 BMW M4"></div>
-        <div class="input-group"><label class="input-label">Category</label>
-          <select class="input-field" id="as-cat"><option value="car">Car</option><option value="jewelry">Jewelry</option><option value="electronics">Electronics</option><option value="other">Other</option></select></div>
-        <div class="input-group"><label class="input-label">Current Value ($)</label><input class="input-field" id="as-val" type="number" placeholder="50000"></div>
-        <div class="input-group"><label class="input-label">Estimated Sell Price ($)</label><input class="input-field" id="as-sell" type="number" placeholder="48000"></div>
+        <div class="input-group"><label class="input-label">Category</label><select class="input-field" id="as-cat" onchange="toggleCarFields()"><option value="car">Car / Vehicle</option><option value="jewelry">Jewelry</option><option value="electronics">Electronics</option><option value="collectible">Collectible</option><option value="other">Other</option></select></div>
+        <div id="car-fields">
+          <div class="input-group"><label class="input-label">Year</label><input class="input-field" id="as-year" type="number" inputmode="numeric" placeholder="2022"></div>
+          <div class="input-group"><label class="input-label">Make</label><input class="input-field" id="as-make" placeholder="BMW"></div>
+          <div class="input-group"><label class="input-label">Model</label><input class="input-field" id="as-model" placeholder="M4"></div>
+          <div class="input-group"><label class="input-label">Mileage</label><input class="input-field" id="as-miles" type="number" inputmode="numeric" placeholder="15000"></div>
+          <div class="input-group"><label class="input-label">Condition</label><select class="input-field" id="as-condition"><option value="excellent">Excellent</option><option value="good">Good</option><option value="fair">Fair</option><option value="poor">Poor</option></select></div>
+        </div>
+        <div class="input-group"><label class="input-label">Current Value ($)</label><input class="input-field" id="as-val" type="number" inputmode="decimal" placeholder="50000"></div>
+        <div class="input-group"><label class="input-label">Estimated Sell Price ($)</label><input class="input-field" id="as-sell" type="number" inputmode="decimal" placeholder="48000"></div>
+        <div class="input-group">
+          <label class="input-label">Photo</label>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('asset-img-input').setAttribute('data-mode','upload');document.getElementById('asset-img-input').click()" style="flex:1">📷 UPLOAD PHOTO</button>
+            <button class="btn btn-ghost btn-sm" onclick="fetchAssetImage()" style="flex:1">🔍 FIND ONLINE</button>
+          </div>
+          <div id="asset-preview" style="margin-top:10px"></div>
+        </div>
         <button class="btn btn-gold" onclick="addAsset()">ADD ASSET</button>
-      </div>
-    `;
+      </div>`;
+    window._pendingAssetImg='';
     renderAssetsList();
-  } else if (section === 'business') {
-    inner.innerHTML = `
+  } else if(section==='business'){
+    inner.innerHTML=`
       <div class="modal-title">Businesses</div>
       <div id="biz-list-inner"></div>
-      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
         <div class="input-group"><label class="input-label">Business Name</label><input class="input-field" id="biz-name" placeholder="e.g. FilesAndFootage"></div>
-        <div class="input-group"><label class="input-label">Status</label>
-          <select class="input-field" id="biz-status"><option value="active">Active</option><option value="building">Building</option><option value="paused">Paused</option></select></div>
-        <div class="input-group"><label class="input-label">Monthly Revenue ($)</label><input class="input-field" id="biz-rev" type="number" placeholder="0"></div>
-        <div class="input-group"><label class="input-label">Estimated Value ($)</label><input class="input-field" id="biz-val" type="number" placeholder="0"></div>
+        <div class="input-group"><label class="input-label">Status</label><select class="input-field" id="biz-status"><option value="active">Active</option><option value="building">Building</option><option value="paused">Paused</option></select></div>
+        <div class="input-group"><label class="input-label">Monthly Revenue ($)</label><input class="input-field" id="biz-rev" type="number" inputmode="decimal" placeholder="0"></div>
+        <div class="input-group"><label class="input-label">Estimated Value ($)</label><input class="input-field" id="biz-val" type="number" inputmode="decimal" placeholder="0"></div>
         <button class="btn btn-gold" onclick="addBusiness()">ADD BUSINESS</button>
-      </div>
-    `;
+      </div>`;
     renderBizList();
-  } else if (section === 'llc') {
-    inner.innerHTML = `
+  } else if(section==='llc'){
+    inner.innerHTML=`
       <div class="modal-title">LLCs</div>
       <div id="llc-list-inner"></div>
-      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
         <div class="input-group"><label class="input-label">LLC Name</label><input class="input-field" id="llc-name" placeholder="e.g. FAF Media LLC"></div>
         <div class="input-group"><label class="input-label">State</label><input class="input-field" id="llc-state" placeholder="e.g. California"></div>
         <div class="input-group"><label class="input-label">Formation Date</label><input class="input-field" id="llc-date" type="date"></div>
-        <div class="input-group"><label class="input-label">Status</label>
-          <select class="input-field" id="llc-status"><option value="active">Active</option><option value="pending">Pending</option><option value="dissolved">Dissolved</option></select></div>
+        <div class="input-group"><label class="input-label">Status</label><select class="input-field" id="llc-status"><option value="active">Active</option><option value="pending">Pending</option><option value="dissolved">Dissolved</option></select></div>
         <button class="btn btn-gold" onclick="addLLC()">ADD LLC</button>
-      </div>
-    `;
+      </div>`;
     renderLLCList();
-  } else if (section === 'crypto') {
-    inner.innerHTML = `
+  } else if(section==='crypto'){
+    inner.innerHTML=`
       <div class="modal-title">Crypto</div>
-      <div id="crypto-list-inner"></div>
-      <div style="margin-top:14px;display:flex;flex-direction:column;gap:10px">
-        <div class="input-group"><label class="input-label">Coin / Token</label><input class="input-field" id="cr-name" placeholder="e.g. Bitcoin, ETH"></div>
-        <div class="input-group"><label class="input-label">Amount Held</label><input class="input-field" id="cr-amount" type="number" placeholder="0.5"></div>
-        <div class="input-group"><label class="input-label">Current Value ($)</label><input class="input-field" id="cr-val" type="number" placeholder="30000"></div>
-        <button class="btn btn-gold" onclick="addCrypto()">ADD HOLDING</button>
+      <div style="background:var(--gold-dim);border:1px solid rgba(201,168,76,0.3);border-radius:10px;padding:12px;font-size:12px;color:var(--gold);line-height:1.6;margin-bottom:14px">
+        🪙 Paste your wallet address and it pulls your live balance automatically. Supports ETH, BTC, SOL, and more.
       </div>
-    `;
+      <div id="crypto-list-inner"></div>
+      <div class="divider"></div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:14px">
+        <div class="input-group"><label class="input-label">Chain</label><select class="input-field" id="cr-chain"><option value="eth">Ethereum (ETH)</option><option value="btc">Bitcoin (BTC)</option><option value="sol">Solana (SOL)</option><option value="manual">Manual Entry</option></select></div>
+        <div class="input-group"><label class="input-label">Wallet Address (or coin name if manual)</label><input class="input-field" id="cr-address" placeholder="0x... or bc1... or wallet address"></div>
+        <div id="cr-manual-fields" style="display:none">
+          <div class="input-group"><label class="input-label">Coin Name</label><input class="input-field" id="cr-name" placeholder="e.g. Bitcoin"></div>
+          <div class="input-group"><label class="input-label">Amount Held</label><input class="input-field" id="cr-amount" type="number" inputmode="decimal" placeholder="0.5"></div>
+          <div class="input-group"><label class="input-label">Current Value ($)</label><input class="input-field" id="cr-val" type="number" inputmode="decimal" placeholder="30000"></div>
+        </div>
+        <button class="btn btn-gold" onclick="addCrypto()">ADD HOLDING</button>
+      </div>`;
+    document.getElementById('cr-chain').addEventListener('change',function(){ document.getElementById('cr-manual-fields').style.display=this.value==='manual'?'block':'none'; });
     renderCryptoList();
-  } else if (section === 'networth') {
-    const nw = calcNetWorth();
-    inner.innerHTML = `
-      <div class="modal-title">Net Worth Breakdown</div>
+  } else if(section==='networth'){
+    const nw=calcNetWorth();
+    inner.innerHTML=`
+      <div class="modal-title">Net Worth</div>
       <div class="nw-hero" style="margin:0 0 14px;padding:20px">
         <div class="nw-label">Total</div>
-        <div class="nw-value">$${nw.toLocaleString()}</div>
+        <div class="nw-value">${fmt(nw)}</div>
       </div>
-      ${[
-        ['💰','Cash / Income', state.income.reduce((s,i)=>s+i.amount,0)],
-        ['🏠','Real Estate', state.realEstate.reduce((s,p)=>s+(p.currentValue||0),0)],
-        ['🚗','Assets', state.assets.reduce((s,a)=>s+(a.value||0),0)],
-        ['💼','Businesses', state.businesses.reduce((s,b)=>s+(b.value||0),0)],
-        ['🪙','Crypto', state.crypto.reduce((s,c)=>s+(c.value||0),0)]
-      ].map(([icon, label, val]) => `
+      ${[['💰','Cash / Income',state.income.reduce((s,i)=>s+i.amount,0)],['🏠','Real Estate',state.realEstate.reduce((s,p)=>s+(p.currentValue||0),0)],['🚗','Assets',state.assets.reduce((s,a)=>s+(a.value||0),0)],['💼','Businesses',state.businesses.reduce((s,b)=>s+(b.value||0),0)],['🪙','Crypto',state.crypto.reduce((s,c)=>s+(c.value||0),0)]].map(([icon,label,val])=>`
         <div class="row-item">
           <div class="row-icon" style="background:var(--gold-dim)">${icon}</div>
           <div class="row-info"><div class="row-title">${label}</div></div>
-          <div class="row-value">$${val.toLocaleString()}</div>
-        </div>
-      `).join('')}
-    `;
+          <div class="row-value">${fmt(val)}</div>
+        </div>`).join('')}`;
   }
   openModal('modal-section');
 }
 
-// Social
-function addPlatform() {
-  const platform = document.getElementById('s-platform').value;
-  const handle = document.getElementById('s-handle').value.trim();
-  if (!handle) { toast('Enter a username or URL'); return; }
-  const entry = { platform, handle, followers: 0, verified: false, date: new Date().toISOString() };
-  state.social.push(entry);
-  save();
-  renderSocialList();
-  document.getElementById('s-handle').value = '';
-  if (platform === 'youtube') {
-    toast('YouTube added — auto-stats coming with API key setup');
+// ============================================================
+// SOCIAL
+// ============================================================
+function toggleYTNote(){
+  const p=document.getElementById('s-platform')?.value;
+  const ytNote=document.getElementById('yt-note');
+  const manNote=document.getElementById('manual-note');
+  if(ytNote) ytNote.style.display=p==='youtube'?'block':'none';
+  if(manNote) manNote.style.display=p!=='youtube'?'block':'none';
+}
+
+async function addPlatform(){
+  const platform=document.getElementById('s-platform').value;
+  const handle=document.getElementById('s-handle').value.trim();
+  if(!handle){ toast('Enter a username or URL'); return; }
+  const entry={platform,handle,followers:0,verified:false,date:new Date().toISOString(),title:handle};
+  if(platform==='youtube'){
+    if(!state.ytApiKey){ toast('Add your YouTube API key in Settings first'); return; }
+    state.social.push(entry);
+    const idx=state.social.length-1;
+    document.getElementById('s-handle').value='';
+    save(); renderSocialList();
+    const data=await fetchYTChannel(handle,idx);
+    if(data){ state.social[idx]={...entry,...data,platform:'youtube'}; save(); renderSocialList(); updateSocialStats(); toast(`${data.title} added!`); }
   } else {
+    state.social.push(entry);
+    save(); renderSocialList(); updateSocialStats();
+    document.getElementById('s-handle').value='';
     toast(`${platform} account added`);
   }
-  updateSocialStats();
 }
 
-function renderSocialList() {
-  const el = document.getElementById('social-platforms-list');
-  if (!el) return;
-  const icons = { youtube:'📺', instagram:'📸', tiktok:'🎵' };
-  if (!state.social.length) { el.innerHTML = `<div class="empty-state" style="padding:16px"><div class="empty-icon">📱</div><div class="empty-title">No Platforms Yet</div></div>`; return; }
-  el.innerHTML = state.social.map((s, i) => `
-    <div class="row-item">
-      <div class="row-icon" style="background:var(--bg3)">${icons[s.platform]||'📱'}</div>
-      <div class="row-info">
-        <div class="row-title">${s.handle} ${s.verified ? '<span class="verified">✓</span>' : ''}</div>
-        <div class="row-sub">${s.platform} · ${s.followers.toLocaleString()} followers</div>
-      </div>
-      <div style="display:flex;gap:6px;align-items:center">
-        ${s.platform !== 'youtube' ? `<button class="btn btn-ghost btn-sm" onclick="updateFollowers(${i})" style="font-size:10px;padding:6px 10px">UPDATE</button>` : ''}
-        <button class="btn btn-danger btn-sm" onclick="removePlatform(${i})" style="font-size:10px;padding:6px 10px">✕</button>
-      </div>
-    </div>
-  `).join('');
+function renderSocialList(){
+  const el=document.getElementById('social-platforms-list');
+  if(!el) return;
+  const icons={youtube:'📺',instagram:'📸',tiktok:'🎵'};
+  if(!state.social.length){ el.innerHTML='<div class="empty-state" style="padding:16px"><div class="empty-icon">📱</div><div class="empty-title">No Platforms Yet</div></div>'; return; }
+  el.innerHTML=state.social.map((s,i)=>{
+    if(s.platform==='youtube') return `
+      <div class="platform-card">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px">
+          ${s.thumbnail?`<img src="${s.thumbnail}" style="width:40px;height:40px;border-radius:50%;object-fit:cover">`:'<div style="width:40px;height:40px;border-radius:50%;background:var(--card);display:flex;align-items:center;justify-content:center">📺</div>'}
+          <div style="flex:1"><div style="font-weight:700;font-size:14px">${s.title||s.handle} ${s.verified?'<span style="color:#4A9EFF">✓</span>':''}</div><div style="font-size:11px;color:var(--gray)">YouTube</div></div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="refreshYT(${i})">↻</button>
+            <button class="btn btn-danger btn-sm" onclick="removePlatform(${i})">✕</button>
+          </div>
+        </div>
+        <div id="yt-status-${i}"></div>
+        <div class="yt-stats">
+          <div class="yt-stat"><div class="yt-stat-val">${fmtNum(s.subscribers)}</div><div class="yt-stat-label">Subs</div></div>
+          <div class="yt-stat"><div class="yt-stat-val">${fmtNum(s.views)}</div><div class="yt-stat-label">Views</div></div>
+          <div class="yt-stat"><div class="yt-stat-val">${fmtNum(s.videos)}</div><div class="yt-stat-label">Videos</div></div>
+        </div>
+      </div>`;
+    return `
+      <div class="platform-card">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div style="font-size:28px">${icons[s.platform]||'📱'}</div>
+          <div style="flex:1"><div style="font-weight:700">${s.handle} ${s.verified?'<span style="color:#4A9EFF">✓</span>':''}</div><div style="font-size:11px;color:var(--gray)">${s.platform} · ${fmtNum(s.followers)} followers</div></div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-outline btn-sm" onclick="updateFollowers(${i})">UPDATE</button>
+            <button class="btn btn-danger btn-sm" onclick="removePlatform(${i})">✕</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
 }
 
-function updateFollowers(i) {
-  const count = prompt('Enter current follower count:');
-  if (count && !isNaN(count)) {
-    state.social[i].followers = parseInt(count);
-    save();
-    renderSocialList();
-    updateSocialStats();
-    toast('Followers updated');
+async function refreshYT(i){
+  const s=state.social[i];
+  const data=await fetchYTChannel(s.handle||s.channelId,i);
+  if(data){ state.social[i]={...s,...data}; save(); renderSocialList(); updateSocialStats(); toast('Stats refreshed'); }
+}
+
+function updateFollowers(i){
+  const c=prompt('Current follower count:');
+  if(c&&!isNaN(c)){ state.social[i].followers=parseInt(c); save(); renderSocialList(); updateSocialStats(); toast('Updated'); }
+}
+
+function removePlatform(i){ state.social.splice(i,1); save(); renderSocialList(); updateSocialStats(); toast('Removed'); }
+
+function updateSocialStats(){
+  const ytSubs=state.social.filter(s=>s.platform==='youtube').reduce((s,p)=>s+(p.subscribers||0),0);
+  const manualFollowers=state.social.filter(s=>s.platform!=='youtube').reduce((s,p)=>s+(p.followers||0),0);
+  const total=ytSubs+manualFollowers;
+  document.getElementById('qs-followers').textContent=fmtNum(total);
+  document.getElementById('more-followers').textContent=fmtNum(total);
+  document.getElementById('qs-social-bar').style.width=`${Math.min(100,(total/1000000)*100)}%`;
+}
+
+function fmtNum(n){
+  if(!n) return '0';
+  if(n>=1000000) return (n/1000000).toFixed(1)+'M';
+  if(n>=1000) return (n/1000).toFixed(1)+'K';
+  return n.toLocaleString();
+}
+
+// ============================================================
+// REAL ESTATE — with projections
+// ============================================================
+const RE_RATES={house:0.04,condo:0.035,multi:0.045,commercial:0.03,land:0.025};
+
+function addProperty(){
+  const name=document.getElementById('re-name').value.trim();
+  if(!name){ toast('Enter a property name'); return; }
+  const val=parseFloat(document.getElementById('re-val').value)||0;
+  const ptype=document.getElementById('re-ptype').value;
+  state.realEstate.push({name,type:document.getElementById('re-type').value,ptype,currentValue:val,monthlyCost:parseFloat(document.getElementById('re-cost').value)||0,date:new Date().toISOString()});
+  addXP(100); save(); renderREList(); updateMoreStats(); updateNetWorth(); toast('Property added');
+  document.getElementById('re-name').value=''; document.getElementById('re-val').value=''; document.getElementById('re-cost').value='';
+}
+
+function renderREList(){
+  const el=document.getElementById('re-list');
+  if(!el) return;
+  if(!state.realEstate.length){ el.innerHTML='<div class="empty-state" style="padding:16px"><div class="empty-icon">🏠</div><div class="empty-title">No Properties Yet</div></div>'; return; }
+  el.innerHTML=state.realEstate.map((p,i)=>{
+    const rate=RE_RATES[p.ptype]||0.04;
+    const proj=[1,3,5,10,20].map(yr=>({yr,val:Math.round(p.currentValue*Math.pow(1+rate,yr))}));
+    return `
+    <div class="platform-card" style="margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div><div style="font-weight:700;font-size:15px">🏠 ${p.name}</div><div style="font-size:12px;color:var(--gray)">${p.type==='own'?'Owned':'Renting'} · ${p.ptype}</div></div>
+        <button class="btn btn-danger btn-sm" onclick="removeRE(${i})">✕</button>
+      </div>
+      <div style="font-family:var(--bebas);font-size:26px;color:var(--gold);margin-bottom:10px">$${p.currentValue.toLocaleString()}</div>
+      <div style="font-size:11px;color:var(--gray);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Value Projections (${(rate*100).toFixed(1)}%/yr avg)</div>
+      ${proj.map(({yr,val})=>`
+        <div class="proj-row">
+          <div class="proj-year">${yr} Year${yr>1?'s':''}</div>
+          <div class="proj-val">$${val.toLocaleString()}</div>
+          <div class="proj-change" style="color:var(--green)">+${Math.round(((val-p.currentValue)/p.currentValue)*100)}%</div>
+        </div>`).join('')}
+    </div>`; }).join('');
+}
+
+function removeRE(i){ state.realEstate.splice(i,1); save(); renderREList(); updateMoreStats(); updateNetWorth(); toast('Removed'); }
+
+// ============================================================
+// ASSETS — with photo + depreciation
+// ============================================================
+const CAR_DEPRECIATION={excellent:[0.85,0.82,0.80,0.78,0.72],good:[0.82,0.78,0.75,0.72,0.65],fair:[0.78,0.72,0.68,0.64,0.58],poor:[0.72,0.65,0.60,0.55,0.48]};
+// Years: 1,2,3,5,10
+
+function toggleCarFields(){
+  const cat=document.getElementById('as-cat')?.value;
+  const cf=document.getElementById('car-fields');
+  if(cf) cf.style.display=cat==='car'?'block':'none';
+}
+
+async function fetchAssetImage(){
+  const name=document.getElementById('as-name').value.trim();
+  if(!name){ toast('Enter an asset name first'); return; }
+  const preview=document.getElementById('asset-preview');
+  preview.innerHTML='<div style="text-align:center;padding:10px"><span class="spinner"></span></div>';
+  try{
+    const res=await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(name)}&per_page=1&client_id=JHpMEEBi0Jb8FS3tQKpTdGh3W7XS_g7yZNnpJLQs6rE`);
+    const data=await res.json();
+    if(data.results&&data.results.length>0){
+      const url=data.results[0].urls.regular;
+      window._pendingAssetImg=url;
+      preview.innerHTML=`<img src="${url}" style="width:100%;height:140px;object-fit:cover;border-radius:10px">`;
+      toast('Image found');
+    } else {
+      preview.innerHTML='<div style="font-size:12px;color:var(--gray)">No image found — try uploading one</div>';
+    }
+  } catch(e){
+    preview.innerHTML='<div style="font-size:12px;color:var(--gray)">Could not fetch image</div>';
   }
 }
 
-function removePlatform(i) {
-  state.social.splice(i, 1);
-  save();
-  renderSocialList();
-  updateSocialStats();
+function handleAssetImgChange(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    window._pendingAssetImg=ev.target.result;
+    const preview=document.getElementById('asset-preview');
+    if(preview) preview.innerHTML=`<img src="${ev.target.result}" style="width:100%;height:140px;object-fit:cover;border-radius:10px">`;
+    toast('Photo added');
+  };
+  r.readAsDataURL(f);
 }
 
-function updateSocialStats() {
-  const total = state.social.reduce((s, p) => s + p.followers, 0);
-  const fmt = v => v >= 1000000 ? `${(v/1000000).toFixed(1)}M` : v >= 1000 ? `${(v/1000).toFixed(1)}K` : `${v}`;
-  document.getElementById('qs-followers').textContent = fmt(total);
-  document.getElementById('more-followers').textContent = fmt(total);
-  const pct = Math.min(100, (total / 1000000) * 100);
-  document.getElementById('qs-social-bar').style.width = `${pct}%`;
+function addAsset(){
+  const name=document.getElementById('as-name').value.trim();
+  if(!name){ toast('Enter asset name'); return; }
+  const cat=document.getElementById('as-cat').value;
+  const asset={
+    name, category:cat,
+    value:parseFloat(document.getElementById('as-val').value)||0,
+    sellPrice:parseFloat(document.getElementById('as-sell').value)||0,
+    image:window._pendingAssetImg||'',
+    date:new Date().toISOString()
+  };
+  if(cat==='car'){
+    asset.year=document.getElementById('as-year').value;
+    asset.make=document.getElementById('as-make').value;
+    asset.model=document.getElementById('as-model').value;
+    asset.mileage=document.getElementById('as-miles').value;
+    asset.condition=document.getElementById('as-condition').value;
+  }
+  state.assets.push(asset);
+  addXP(75); save(); renderAssetsList(); updateMoreStats(); updateNetWorth();
+  toast('Asset added'); window._pendingAssetImg='';
+  document.getElementById('as-name').value=''; document.getElementById('as-val').value=''; document.getElementById('as-sell').value='';
+  document.getElementById('asset-preview').innerHTML='';
 }
 
-// Real Estate
-function addProperty() {
-  const name = document.getElementById('re-name').value.trim();
-  if (!name) { toast('Enter a property name'); return; }
-  state.realEstate.push({
-    name, type: document.getElementById('re-type').value,
-    currentValue: parseFloat(document.getElementById('re-val').value) || 0,
-    monthlyCost: parseFloat(document.getElementById('re-cost').value) || 0,
-    date: new Date().toISOString()
-  });
-  addXP(100);
-  save();
-  renderREList();
-  updateMoreStats();
-  updateNetWorth();
-  toast('Property added');
-}
-
-function renderREList() {
-  const el = document.getElementById('re-list');
-  if (!el) return;
-  if (!state.realEstate.length) { el.innerHTML = `<div class="empty-state" style="padding:16px"><div class="empty-icon">🏠</div><div class="empty-title">No Properties Yet</div></div>`; return; }
-  el.innerHTML = state.realEstate.map((p, i) => {
-    const future5 = Math.round(p.currentValue * Math.pow(1.04, 5));
-    const future10 = Math.round(p.currentValue * Math.pow(1.04, 10));
+function renderAssetsList(){
+  const el=document.getElementById('assets-list');
+  if(!el) return;
+  const icons={car:'🚗',jewelry:'💎',electronics:'💻',collectible:'🏆',other:'📦'};
+  if(!state.assets.length){ el.innerHTML='<div class="empty-state" style="padding:16px"><div class="empty-icon">🚗</div><div class="empty-title">No Assets Yet</div></div>'; return; }
+  el.innerHTML=state.assets.map((a,i)=>{
+    let projHtml='';
+    if(a.category==='car'&&a.value){
+      const rates=CAR_DEPRECIATION[a.condition||'good'];
+      const projs=[{yr:1,mult:rates[0]},{yr:2,mult:rates[1]},{yr:3,mult:rates[2]},{yr:5,mult:rates[3]},{yr:10,mult:rates[4]}];
+      projHtml=`<div style="font-size:11px;color:var(--gray);font-weight:600;letter-spacing:1px;text-transform:uppercase;margin:10px 0 6px">Depreciation Estimates</div>
+      ${projs.map(({yr,mult})=>`<div class="proj-row"><div class="proj-year">${yr}yr</div><div class="proj-val">$${Math.round(a.value*mult).toLocaleString()}</div><div class="proj-change" style="color:var(--red)">-${Math.round((1-mult)*100)}%</div></div>`).join('')}`;
+    }
     return `
-    <div class="row-item">
-      <div class="row-icon" style="background:rgba(76,175,125,0.1)">🏠</div>
-      <div class="row-info">
-        <div class="row-title">${p.name}</div>
-        <div class="row-sub">${p.type === 'own' ? 'Owned' : 'Renting'} · $${p.currentValue.toLocaleString()}</div>
-        <div class="row-sub" style="color:var(--green)">5yr: $${future5.toLocaleString()} · 10yr: $${future10.toLocaleString()}</div>
+    <div class="platform-card" style="margin-bottom:10px">
+      ${a.image?`<img src="${a.image}" style="width:100%;height:150px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:''}
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div><div style="font-weight:700;font-size:15px">${icons[a.category]||'📦'} ${a.name}</div><div style="font-size:12px;color:var(--gray)">${a.category}${a.year?' · '+a.year:''}</div></div>
+        <button class="btn btn-danger btn-sm" onclick="removeAsset(${i})">✕</button>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="removeRE(${i})" style="font-size:10px;padding:6px 10px">✕</button>
-    </div>
-  `}).join('');
-}
-
-function removeRE(i) { state.realEstate.splice(i,1); save(); renderREList(); updateMoreStats(); updateNetWorth(); toast('Property removed'); }
-
-// Assets
-function addAsset() {
-  const name = document.getElementById('as-name').value.trim();
-  if (!name) { toast('Enter asset name'); return; }
-  state.assets.push({
-    name, category: document.getElementById('as-cat').value,
-    value: parseFloat(document.getElementById('as-val').value) || 0,
-    sellPrice: parseFloat(document.getElementById('as-sell').value) || 0,
-    date: new Date().toISOString()
-  });
-  addXP(75);
-  save();
-  renderAssetsList();
-  updateMoreStats();
-  updateNetWorth();
-  toast('Asset added');
-}
-
-function renderAssetsList() {
-  const el = document.getElementById('assets-list');
-  if (!el) return;
-  const icons = { car:'🚗', jewelry:'💎', electronics:'💻', other:'📦' };
-  if (!state.assets.length) { el.innerHTML = `<div class="empty-state" style="padding:16px"><div class="empty-icon">🚗</div><div class="empty-title">No Assets Yet</div></div>`; return; }
-  el.innerHTML = state.assets.map((a, i) => `
-    <div class="row-item">
-      <div class="row-icon" style="background:var(--gold-dim)">${icons[a.category]||'📦'}</div>
-      <div class="row-info">
-        <div class="row-title">${a.name}</div>
-        <div class="row-sub">Value: $${a.value.toLocaleString()} · Sell: $${a.sellPrice.toLocaleString()}</div>
+      <div style="display:flex;gap:14px;margin-bottom:8px">
+        <div><div style="font-size:10px;color:var(--gray)">Value</div><div style="font-family:var(--bebas);font-size:20px;color:var(--gold)">$${a.value.toLocaleString()}</div></div>
+        <div><div style="font-size:10px;color:var(--gray)">Sell Est.</div><div style="font-family:var(--bebas);font-size:20px;color:var(--green)">$${a.sellPrice.toLocaleString()}</div></div>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="removeAsset(${i})" style="font-size:10px;padding:6px 10px">✕</button>
-    </div>
-  `).join('');
+      ${projHtml}
+    </div>`; }).join('');
 }
 
-function removeAsset(i) { state.assets.splice(i,1); save(); renderAssetsList(); updateMoreStats(); updateNetWorth(); }
+function removeAsset(i){ state.assets.splice(i,1); save(); renderAssetsList(); updateMoreStats(); updateNetWorth(); }
 
-// Business
-function addBusiness() {
-  const name = document.getElementById('biz-name').value.trim();
-  if (!name) { toast('Enter business name'); return; }
-  state.businesses.push({
-    name, status: document.getElementById('biz-status').value,
-    revenue: parseFloat(document.getElementById('biz-rev').value) || 0,
-    value: parseFloat(document.getElementById('biz-val').value) || 0,
-    date: new Date().toISOString()
-  });
-  addXP(100);
-  save();
-  renderBizList();
-  updateMoreStats();
-  updateNetWorth();
-  toast('Business added');
+// ============================================================
+// BUSINESS
+// ============================================================
+function addBusiness(){
+  const name=document.getElementById('biz-name').value.trim();
+  if(!name){ toast('Enter business name'); return; }
+  state.businesses.push({name,status:document.getElementById('biz-status').value,revenue:parseFloat(document.getElementById('biz-rev').value)||0,value:parseFloat(document.getElementById('biz-val').value)||0,date:new Date().toISOString()});
+  addXP(100); save(); renderBizList(); updateMoreStats(); updateNetWorth(); toast('Business added');
+  document.getElementById('biz-name').value=''; document.getElementById('biz-rev').value=''; document.getElementById('biz-val').value='';
 }
 
-function renderBizList() {
-  const el = document.getElementById('biz-list-inner');
-  if (!el) return;
-  const statusColor = { active:'badge-green', building:'badge-gold', paused:'badge-gray' };
-  if (!state.businesses.length) { el.innerHTML = `<div class="empty-state" style="padding:16px"><div class="empty-icon">💼</div><div class="empty-title">No Businesses Yet</div></div>`; return; }
-  el.innerHTML = state.businesses.map((b, i) => `
+function renderBizList(){
+  const el=document.getElementById('biz-list-inner');
+  if(!el) return;
+  const sc={active:'badge-green',building:'badge-gold',paused:'badge-gray'};
+  if(!state.businesses.length){ el.innerHTML='<div class="empty-state" style="padding:16px"><div class="empty-icon">💼</div><div class="empty-title">No Businesses Yet</div></div>'; return; }
+  el.innerHTML=state.businesses.map((b,i)=>`
     <div class="row-item">
       <div class="row-icon" style="background:rgba(201,168,76,0.1)">💼</div>
       <div class="row-info">
-        <div style="display:flex;align-items:center;gap:8px"><div class="row-title">${b.name}</div><div class="badge ${statusColor[b.status]}">${b.status}</div></div>
-        <div class="row-sub">Revenue: $${b.revenue.toLocaleString()}/mo · Value: $${b.value.toLocaleString()}</div>
+        <div style="display:flex;gap:8px;align-items:center"><div class="row-title">${b.name}</div><div class="badge ${sc[b.status]}">${b.status}</div></div>
+        <div class="row-sub">$${b.revenue.toLocaleString()}/mo · Value: $${b.value.toLocaleString()}</div>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="removeBiz(${i})" style="font-size:10px;padding:6px 10px">✕</button>
-    </div>
-  `).join('');
+      <button class="btn btn-danger btn-sm" onclick="removeBiz(${i})">✕</button>
+    </div>`).join('');
 }
 
-function removeBiz(i) { state.businesses.splice(i,1); save(); renderBizList(); updateMoreStats(); updateNetWorth(); }
+function removeBiz(i){ state.businesses.splice(i,1); save(); renderBizList(); updateMoreStats(); updateNetWorth(); }
 
+// ============================================================
 // LLC
-function addLLC() {
-  const name = document.getElementById('llc-name').value.trim();
-  if (!name) { toast('Enter LLC name'); return; }
-  state.llcs.push({
-    name, state: document.getElementById('llc-state').value,
-    formed: document.getElementById('llc-date').value,
-    status: document.getElementById('llc-status').value
-  });
-  addXP(75);
-  save();
-  renderLLCList();
-  updateMoreStats();
-  toast('LLC added');
+// ============================================================
+function addLLC(){
+  const name=document.getElementById('llc-name').value.trim();
+  if(!name){ toast('Enter LLC name'); return; }
+  state.llcs.push({name,state:document.getElementById('llc-state').value,formed:document.getElementById('llc-date').value,status:document.getElementById('llc-status').value});
+  addXP(75); save(); renderLLCList(); updateMoreStats(); toast('LLC added');
+  document.getElementById('llc-name').value='';
 }
 
-function renderLLCList() {
-  const el = document.getElementById('llc-list-inner');
-  if (!el) return;
-  if (!state.llcs.length) { el.innerHTML = `<div class="empty-state" style="padding:16px"><div class="empty-icon">🏛️</div><div class="empty-title">No LLCs Yet</div></div>`; return; }
-  const statusColor = { active:'badge-green', pending:'badge-gold', dissolved:'badge-gray' };
-  el.innerHTML = state.llcs.map((l, i) => `
+function renderLLCList(){
+  const el=document.getElementById('llc-list-inner');
+  if(!el) return;
+  const sc={active:'badge-green',pending:'badge-gold',dissolved:'badge-gray'};
+  if(!state.llcs.length){ el.innerHTML='<div class="empty-state" style="padding:16px"><div class="empty-icon">🏛️</div><div class="empty-title">No LLCs Yet</div></div>'; return; }
+  el.innerHTML=state.llcs.map((l,i)=>`
     <div class="row-item">
       <div class="row-icon" style="background:rgba(85,136,238,0.1)">🏛️</div>
       <div class="row-info">
-        <div style="display:flex;align-items:center;gap:8px"><div class="row-title">${l.name}</div><div class="badge ${statusColor[l.status]}">${l.status}</div></div>
-        <div class="row-sub">${l.state} · Formed: ${l.formed || 'Not set'}</div>
+        <div style="display:flex;gap:8px;align-items:center"><div class="row-title">${l.name}</div><div class="badge ${sc[l.status]}">${l.status}</div></div>
+        <div class="row-sub">${l.state||'—'} · Formed: ${l.formed||'Not set'}</div>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="removeLLC(${i})" style="font-size:10px;padding:6px 10px">✕</button>
-    </div>
-  `).join('');
+      <button class="btn btn-danger btn-sm" onclick="removeLLC(${i})">✕</button>
+    </div>`).join('');
 }
 
-function removeLLC(i) { state.llcs.splice(i,1); save(); renderLLCList(); }
+function removeLLC(i){ state.llcs.splice(i,1); save(); renderLLCList(); }
 
-// Crypto
-function addCrypto() {
-  const name = document.getElementById('cr-name').value.trim();
-  if (!name) { toast('Enter coin name'); return; }
-  state.crypto.push({
-    name, amount: parseFloat(document.getElementById('cr-amount').value) || 0,
-    value: parseFloat(document.getElementById('cr-val').value) || 0,
-    date: new Date().toISOString()
-  });
-  addXP(50);
-  save();
-  renderCryptoList();
-  updateMoreStats();
-  updateNetWorth();
-  toast('Holding added');
+// ============================================================
+// CRYPTO — live blockchain
+// ============================================================
+async function addCrypto(){
+  const chain=document.getElementById('cr-chain').value;
+  const address=document.getElementById('cr-address').value.trim();
+  if(!address){ toast('Enter wallet address'); return; }
+  if(chain==='manual'){
+    const name=document.getElementById('cr-name').value.trim()||address;
+    const amount=parseFloat(document.getElementById('cr-amount').value)||0;
+    const val=parseFloat(document.getElementById('cr-val').value)||0;
+    state.crypto.push({name,chain:'manual',address,amount,value:val,lastFetched:new Date().toISOString()});
+    save(); renderCryptoList(); updateMoreStats(); updateNetWorth(); toast('Holding added');
+    return;
+  }
+  toast('Fetching wallet balance...');
+  let value=0, amount=0, name=chain.toUpperCase();
+  try{
+    if(chain==='eth'){
+      const res=await fetch(`https://api.etherscan.io/api?module=account&action=balance&address=${address}&tag=latest&apikey=YourApiKeyToken`);
+      const data=await res.json();
+      if(data.status==='1'){ amount=parseInt(data.result)/1e18; }
+      // Get ETH price
+      const priceRes=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd');
+      const priceData=await priceRes.json();
+      const price=priceData?.ethereum?.usd||0;
+      value=amount*price;
+    } else if(chain==='btc'){
+      const res=await fetch(`https://blockchain.info/balance?active=${address}&cors=true`);
+      const data=await res.json();
+      const key=Object.keys(data)[0];
+      amount=(data[key]?.final_balance||0)/1e8;
+      const priceRes=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+      const priceData=await priceRes.json();
+      value=amount*(priceData?.bitcoin?.usd||0);
+    } else if(chain==='sol'){
+      const res=await fetch(`https://api.mainnet-beta.solana.com`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'getBalance',params:[address]})});
+      const data=await res.json();
+      amount=(data.result?.value||0)/1e9;
+      const priceRes=await fetch('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd');
+      const priceData=await priceRes.json();
+      value=amount*(priceData?.solana?.usd||0);
+    }
+    state.crypto.push({name,chain,address,amount:parseFloat(amount.toFixed(6)),value:parseFloat(value.toFixed(2)),lastFetched:new Date().toISOString()});
+    save(); renderCryptoList(); updateMoreStats(); updateNetWorth();
+    toast(`${name}: ${amount.toFixed(4)} tokens (~$${Math.round(value).toLocaleString()})`);
+  } catch(e){
+    toast('Could not fetch wallet — try manual entry'); console.error(e);
+  }
+  document.getElementById('cr-address').value='';
 }
 
-function renderCryptoList() {
-  const el = document.getElementById('crypto-list-inner');
-  if (!el) return;
-  if (!state.crypto.length) { el.innerHTML = `<div class="empty-state" style="padding:16px"><div class="empty-icon">🪙</div><div class="empty-title">No Holdings Yet</div></div>`; return; }
-  el.innerHTML = state.crypto.map((c, i) => `
+function renderCryptoList(){
+  const el=document.getElementById('crypto-list-inner');
+  if(!el) return;
+  const icons={eth:'⟠',btc:'₿',sol:'◎',manual:'🪙'};
+  if(!state.crypto.length){ el.innerHTML='<div class="empty-state" style="padding:16px"><div class="empty-icon">🪙</div><div class="empty-title">No Holdings Yet</div></div>'; return; }
+  el.innerHTML=state.crypto.map((c,i)=>`
     <div class="row-item">
-      <div class="row-icon" style="background:rgba(255,165,0,0.1)">🪙</div>
+      <div class="row-icon" style="background:rgba(255,165,0,0.1);font-size:20px">${icons[c.chain]||'🪙'}</div>
       <div class="row-info">
         <div class="row-title">${c.name}</div>
-        <div class="row-sub">${c.amount} coins · $${c.value.toLocaleString()}</div>
+        <div class="row-sub">${c.amount} · ${c.address?.length>16?c.address.slice(0,8)+'...'+c.address.slice(-6):c.address||'manual'}</div>
+        <div class="row-sub" style="font-size:10px;color:var(--gray2)">Updated: ${new Date(c.lastFetched).toLocaleDateString()}</div>
       </div>
-      <button class="btn btn-danger btn-sm" onclick="removeCrypto(${i})" style="font-size:10px;padding:6px 10px">✕</button>
-    </div>
-  `).join('');
+      <div style="text-align:right">
+        <div class="row-value">$${c.value.toLocaleString()}</div>
+        <button class="btn btn-danger btn-sm" onclick="removeCrypto(${i})" style="margin-top:4px;padding:4px 8px;font-size:10px">✕</button>
+      </div>
+    </div>`).join('');
 }
 
-function removeCrypto(i) { state.crypto.splice(i,1); save(); renderCryptoList(); updateMoreStats(); updateNetWorth(); }
+function removeCrypto(i){ state.crypto.splice(i,1); save(); renderCryptoList(); updateMoreStats(); updateNetWorth(); }
 
-// More stats
-function updateMoreStats() {
-  const re = state.realEstate.reduce((s,p) => s+(p.currentValue||0), 0);
-  const assets = state.assets.reduce((s,a) => s+(a.value||0), 0);
-  const crypto = state.crypto.reduce((s,c) => s+(c.value||0), 0);
-  const fmt = v => v >= 1000000 ? `$${(v/1000000).toFixed(1)}M` : v >= 1000 ? `$${(v/1000).toFixed(0)}K` : `$${v}`;
-  document.getElementById('more-re-val').textContent = fmt(re);
-  document.getElementById('more-assets-val').textContent = fmt(assets);
-  document.getElementById('more-crypto-val').textContent = fmt(crypto);
-  document.getElementById('more-biz-count').textContent = `${state.businesses.length} business${state.businesses.length !== 1 ? 'es' : ''}`;
-  document.getElementById('more-llc-count').textContent = `${state.llcs.length} LLC${state.llcs.length !== 1 ? 's' : ''}`;
+// ============================================================
+// MORE STATS
+// ============================================================
+function updateMoreStats(){
+  const re=state.realEstate.reduce((s,p)=>s+(p.currentValue||0),0);
+  const assets=state.assets.reduce((s,a)=>s+(a.value||0),0);
+  const crypto=state.crypto.reduce((s,c)=>s+(c.value||0),0);
+  document.getElementById('more-re-val').textContent=fmt(re);
+  document.getElementById('more-assets-val').textContent=fmt(assets);
+  document.getElementById('more-crypto-val').textContent=fmt(crypto);
+  document.getElementById('more-biz-count').textContent=`${state.businesses.length} business${state.businesses.length!==1?'es':''}`;
+  document.getElementById('more-llc-count').textContent=`${state.llcs.length} LLC${state.llcs.length!==1?'s':''}`;
 }
 
 // ============================================================
 // CREW
 // ============================================================
-function addCrewMember() {
-  const name = document.getElementById('crew-username').value.trim();
-  if (!name) { toast('Enter a username'); return; }
-  if (state.crew.find(c => c.name.toLowerCase() === name.toLowerCase())) { toast('Already in crew'); return; }
-  state.crew.push({ name, level: 1, xp: 0, joined: new Date().toLocaleDateString() });
-  save();
-  renderCrew();
-  closeModal('modal-crew');
-  toast(`${name} added to crew`);
+function addCrewMember(){
+  const name=document.getElementById('crew-username').value.trim();
+  if(!name){ toast('Enter a username'); return; }
+  if(state.crew.find(c=>c.name.toLowerCase()===name.toLowerCase())){ toast('Already in crew'); return; }
+  state.crew.push({name,level:1,joined:new Date().toLocaleDateString()});
+  save(); renderCrew(); closeModal('modal-crew'); toast(`${name} added to crew`);
 }
 
-function renderCrew() {
-  const el = document.getElementById('crew-list');
-  if (!state.crew.length) {
-    el.innerHTML = `<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No Crew Yet</div><div class="empty-sub">Invite your friends to compare stats.</div></div>`;
-    return;
-  }
-  el.innerHTML = state.crew.map((c, i) => `
+function renderCrew(){
+  const el=document.getElementById('crew-list');
+  if(!state.crew.length){ el.innerHTML='<div class="empty-state"><div class="empty-icon">👥</div><div class="empty-title">No Crew Yet</div><div class="empty-sub">Add your friends to compare stats.</div></div>'; return; }
+  el.innerHTML=state.crew.map((c,i)=>`
     <div class="crew-card">
       <div class="crew-pfp">${c.name[0].toUpperCase()}</div>
-      <div style="flex:1">
-        <div style="font-weight:700;font-size:15px">${c.name}</div>
-        <div style="font-size:12px;color:var(--gray)">Level ${c.level} · Joined ${c.joined}</div>
-      </div>
-      <button class="btn btn-danger btn-sm" onclick="removeCrew(${i})" style="font-size:10px;padding:6px 10px">✕</button>
-    </div>
-  `).join('');
+      <div style="flex:1"><div style="font-weight:700;font-size:15px">${c.name}</div><div style="font-size:12px;color:var(--gray)">Level ${c.level} · Joined ${c.joined}</div></div>
+      <button class="btn btn-danger btn-sm" onclick="removeCrew(${i})">✕</button>
+    </div>`).join('');
 }
 
-function removeCrew(i) {
-  state.crew.splice(i, 1);
-  save();
-  renderCrew();
-}
-
-function copyInviteLink() {
-  const link = `${window.location.origin}${window.location.pathname}?crew=${encodeURIComponent(state.username)}`;
-  navigator.clipboard?.writeText(link).then(() => toast('Link copied!')).catch(() => toast('Copy the link manually'));
-}
+function removeCrew(i){ state.crew.splice(i,1); save(); renderCrew(); }
+function copyInviteLink(){ const l=`${window.location.href.split('?')[0]}?crew=${encodeURIComponent(state.username)}`; navigator.clipboard?.writeText(l).then(()=>toast('Link copied!')).catch(()=>toast('Copy the link above')); }
 
 // ============================================================
-// BANK (Plaid placeholder)
+// XP + ACTIVITY
 // ============================================================
-function connectBank() {
-  toast('Plaid integration requires API key setup — coming in next version');
-}
-
-// ============================================================
-// XP & ACTIVITY
-// ============================================================
-function addXP(amount) {
-  state.xp = (state.xp || 0) + amount;
-}
-
-function addActivity(text) {
-  state.activity = state.activity || [];
-  state.activity.unshift({ text, date: new Date().toLocaleDateString() });
-  if (state.activity.length > 20) state.activity = state.activity.slice(0, 20);
-  renderActivity();
-}
-
-function renderActivity() {
-  const el = document.getElementById('home-activity');
-  if (!state.activity?.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:24px"><div class="empty-icon">📋</div><div class="empty-title">No Activity Yet</div><div class="empty-sub">Start logging your stats and they'll show up here.</div></div>`;
-    return;
-  }
-  el.innerHTML = state.activity.slice(0,8).map(a => `
-    <div class="row-item">
-      <div class="row-info"><div class="row-title" style="font-size:13px">${a.text}</div><div class="row-sub">${a.date}</div></div>
-    </div>
-  `).join('');
+function addXP(n){ state.xp=(state.xp||0)+n; renderProfile(); }
+function addActivity(text){ state.activity=state.activity||[]; state.activity.unshift({text,date:new Date().toLocaleDateString()}); if(state.activity.length>20) state.activity=state.activity.slice(0,20); save(); renderActivity(); }
+function renderActivity(){
+  const el=document.getElementById('home-activity');
+  if(!state.activity?.length){ el.innerHTML='<div class="empty-state" style="padding:20px"><div class="empty-icon">📋</div><div class="empty-title">No Activity Yet</div><div class="empty-sub">Start logging and it shows up here.</div></div>'; return; }
+  el.innerHTML=state.activity.slice(0,8).map(a=>`<div class="row-item"><div class="row-info"><div class="row-title" style="font-size:13px">${a.text}</div><div class="row-sub">${a.date}</div></div></div>`).join('');
 }
 
 // ============================================================
 // TOAST
 // ============================================================
-function toast(msg) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 2200);
-}
+function toast(msg){ const el=document.getElementById('toast'); el.textContent=msg; el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),2400); }
 
 // ============================================================
 // RENDER ALL
 // ============================================================
-function renderAll() {
-  renderProfile();
-  renderFitness();
-  renderSkills();
-  renderMoney();
-  renderCrew();
-  renderActivity();
-  updateSocialStats();
-  updateMoreStats();
-  updateNetWorth();
-}
+function renderAll(){ renderProfile(); renderFitness(); renderSkills(); renderMoney(); renderCrew(); renderActivity(); updateSocialStats(); updateMoreStats(); updateNetWorth(); }
 </script>
 </body>
 </html>
-SCRIPTEOF
+HTMLEOF
+echo "Done. $(wc -l < /home/claude/game-of-life/index.html) lines"
